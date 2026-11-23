@@ -1,0 +1,3105 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Hanoi Kuleleri — Algoritma ve Yığın (LIFO) Atölyesi</title>
+  <style>
+    :root {
+      --bg-deep: #1f1712;
+      --bg-warm: #2c2119;
+      --surface: #faf5ec;
+      --surface-soft: #f3eadc;
+      --surface-card: rgba(255, 251, 244, 0.94);
+      --border-warm: #dccbb3;
+      --border-strong: #c4a77d;
+      --text-primary: #2d1f14;
+      --text-secondary: #68523e;
+      --text-muted: #8c745d;
+      --accent-gold: #c98a24;
+      --accent-gold-bright: #f2b749;
+      --accent-gold-dark: #8f5c10;
+      --accent-emerald: #1c8c73;
+      --accent-emerald-bg: #e3f7f1;
+      --accent-danger: #c9302c;
+      --accent-danger-bg: #fdeaea;
+      --accent-info: #2364aa;
+      --accent-info-bg: #e8f2fc;
+      --shadow-sm: 0 2px 8px rgba(45, 31, 20, 0.08);
+      --shadow-md: 0 8px 24px rgba(45, 31, 20, 0.14);
+      --shadow-lg: 0 18px 46px rgba(26, 16, 8, 0.34);
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 22px;
+      --font-sans: "Segoe UI", "Ubuntu", "Cantarell", "Noto Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: "JetBrains Mono", "Ubuntu Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      background:
+        radial-gradient(circle at 18% 8%, rgba(247, 211, 145, 0.32), transparent 46%),
+        radial-gradient(circle at 86% 12%, rgba(212, 145, 68, 0.2), transparent 40%),
+        linear-gradient(160deg, #efe4d2 0%, #e4d2b8 52%, #d5be9e 100%);
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* ==================== HEADER ==================== */
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 20px;
+      background: linear-gradient(180deg, #3a2618 0%, #2a1b11 100%);
+      color: #fdf6e9;
+      border-bottom: 3px solid #c98a24;
+      box-shadow: 0 4px 18px rgba(26, 15, 7, 0.28);
+      position: relative;
+      z-index: 20;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #f3c15b 0%, #b57316 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.5), 0 3px 10px rgba(0,0,0,0.35);
+      flex-shrink: 0;
+    }
+
+    .brand-text h1 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: #fff8eb;
+      line-height: 1.15;
+    }
+
+    .brand-text p {
+      font-size: 0.78rem;
+      color: #e4cca8;
+      font-weight: 500;
+    }
+
+    /* Seviye Seçici */
+    .level-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(18, 11, 6, 0.45);
+      padding: 4px;
+      border-radius: 14px;
+      border: 1px solid rgba(242, 183, 73, 0.28);
+    }
+
+    .level-btn {
+      appearance: none;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #e8d5b9;
+      padding: 7px 13px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.84rem;
+      font-weight: 600;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.2;
+      transition: all 0.2s ease;
+    }
+
+    .level-btn small {
+      font-size: 0.7rem;
+      font-weight: 500;
+      opacity: 0.85;
+    }
+
+    .level-btn:hover {
+      background: rgba(242, 183, 73, 0.16);
+      color: #fff;
+    }
+
+    .level-btn.active {
+      background: linear-gradient(180deg, #f4c15a 0%, #c6831c 100%);
+      color: #241509;
+      border-color: #ffe3a4;
+      box-shadow: 0 2px 10px rgba(242, 183, 73, 0.35);
+    }
+
+    .level-btn.active small {
+      color: #3d240b;
+      font-weight: 700;
+      opacity: 1;
+    }
+
+    /* Sağ üst araç butonları */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      appearance: none;
+      border: 1px solid rgba(242, 183, 73, 0.35);
+      background: rgba(255, 245, 224, 0.1);
+      color: #fdf3e1;
+      height: 40px;
+      min-width: 40px;
+      padding: 0 12px;
+      border-radius: 11px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+
+    .icon-btn:hover {
+      background: rgba(242, 183, 73, 0.24);
+      border-color: #f4c15a;
+      transform: translateY(-1px);
+    }
+
+    .icon-btn:active {
+      transform: translateY(0);
+    }
+
+    .icon-btn.help-btn {
+      width: 40px;
+      padding: 0;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #f3c15b, #c5821c);
+      color: #261609;
+      border-color: #ffe4a7;
+      font-size: 1.15rem;
+      font-weight: 900;
+      box-shadow: 0 2px 10px rgba(243, 193, 91, 0.3);
+    }
+
+    .icon-btn.muted {
+      opacity: 0.68;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    /* ==================== MAIN LAYOUT ==================== */
+    .workspace {
+      flex: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 335px;
+      gap: 16px;
+      padding: 14px 18px 18px;
+      max-width: 1520px;
+      width: 100%;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    /* ==================== LEFT STAGE COLUMN ==================== */
+    .stage-column {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    /* HUD İstatistik Şeridi */
+    .hud-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .stat-value {
+      font-size: 1.55rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-sub {
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .formula-pill {
+      font-family: var(--font-mono);
+      background: #f5e6cc;
+      color: #7c4d0b;
+      border: 1px solid #dfc190;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .status-badge {
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+
+    .status-badge.optimal {
+      background: var(--accent-emerald-bg);
+      color: #126955;
+      border-color: #a9e3d3;
+    }
+
+    .status-badge.extra {
+      background: #fff3da;
+      color: #935b09;
+      border-color: #f0cf8c;
+    }
+
+    .status-badge.sim {
+      background: var(--accent-info-bg);
+      color: #184e88;
+      border-color: #b4d4f5;
+    }
+
+    /* Akıllı Geri Bildirim Bandı */
+    .feedback-bar {
+      min-height: 46px;
+      padding: 9px 15px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-card);
+      border: 1.5px solid var(--border-warm);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      transition: background-color 0.22s ease, border-color 0.22s ease, color 0.22s ease;
+    }
+
+    .feedback-bar .fb-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+      background: #f0e2ca;
+      color: #7d5218;
+      font-weight: 800;
+    }
+
+    .feedback-bar.error {
+      background: var(--accent-danger-bg);
+      border-color: #e68885;
+      color: #8f1d1a;
+      animation: barPulse 0.35s ease;
+    }
+
+    .feedback-bar.error .fb-icon {
+      background: #d93834;
+      color: #fff;
+    }
+
+    .feedback-bar.hint {
+      background: #fff7e0;
+      border-color: #e4b145;
+      color: #6f4506;
+    }
+
+    .feedback-bar.hint .fb-icon {
+      background: #dc981d;
+      color: #fff;
+    }
+
+    .feedback-bar.success {
+      background: var(--accent-emerald-bg);
+      border-color: #6bcbb3;
+      color: #0e5846;
+    }
+
+    .feedback-bar.success .fb-icon {
+      background: #1a8c72;
+      color: #fff;
+    }
+
+    .feedback-bar.info {
+      background: var(--accent-info-bg);
+      border-color: #8dbded;
+      color: #174679;
+    }
+
+    .feedback-bar.info .fb-icon {
+      background: #2364aa;
+      color: #fff;
+    }
+
+    @keyframes barPulse {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-5px); }
+      45% { transform: translateX(5px); }
+      70% { transform: translateX(-3px); }
+    }
+
+    /* SVG Sahne Kartı */
+    .board-frame {
+      position: relative;
+      background: #2a1b11;
+      border-radius: var(--radius-lg);
+      padding: 6px;
+      box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 224, 166, 0.35);
+      border: 2px solid #8a6234;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 330px;
+    }
+
+    #gameSvg {
+      width: 100%;
+      height: auto;
+      max-height: 540px;
+      display: block;
+      border-radius: 16px;
+      user-select: none;
+      touch-action: none;
+      cursor: default;
+    }
+
+    .peg-hit-zone {
+      cursor: pointer;
+    }
+
+    .disk-group {
+      cursor: grab;
+      transition: filter 0.18s ease;
+    }
+
+    .disk-group.dragging {
+      cursor: grabbing;
+    }
+
+    .disk-group.locked-disk {
+      cursor: not-allowed;
+    }
+
+    /* Alt Kontrol Barı */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-md);
+      padding: 10px 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .controls-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1.5px solid transparent;
+      border-radius: 11px;
+      padding: 9px 15px;
+      font-family: inherit;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .btn:disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    .btn-primary {
+      background: linear-gradient(180deg, #df9c2d 0%, #b57113 100%);
+      color: #fff;
+      border-color: #9e5f0d;
+      box-shadow: 0 3px 10px rgba(181, 113, 19, 0.28);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(180deg, #eba939 0%, #c67d18 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(180deg, #249f83 0%, #167a63 100%);
+      color: #fff;
+      border-color: #116250;
+      box-shadow: 0 3px 10px rgba(22, 122, 99, 0.26);
+    }
+
+    .btn-emerald:hover:not(:disabled) {
+      background: linear-gradient(180deg, #29b293 0%, #1a8c72 100%);
+      transform: translateY(-1px);
+    }
+
+    .btn-danger-soft {
+      background: #fdeceb;
+      color: #a62521;
+      border-color: #ebb3b1;
+    }
+
+    .btn-danger-soft:hover:not(:disabled) {
+      background: #fbd6d4;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #f5ecdc;
+      color: var(--text-primary);
+      border-color: #d6c09e;
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #ebdcb9;
+      border-color: #be9f71;
+      transform: translateY(-1px);
+    }
+
+    .speed-control {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      background: #f3e8d4;
+      padding: 4px 10px;
+      border-radius: 10px;
+      border: 1px solid #d6bf9b;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .speed-control.visible {
+      display: inline-flex;
+    }
+
+    .speed-control select {
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 700;
+      background: #fffaf0;
+      color: var(--text-primary);
+      border: 1px solid #cfb58d;
+      border-radius: 7px;
+      padding: 3px 6px;
+      cursor: pointer;
+    }
+
+    /* ==================== RIGHT PANEL (ALGORİTMA & YIĞIN) ==================== */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .panel-card {
+      background: var(--surface-card);
+      border: 1px solid var(--border-warm);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel-header {
+      padding: 11px 14px;
+      background: linear-gradient(180deg, #f6ebd9 0%, #ede0c9 100%);
+      border-bottom: 1px solid var(--border-warm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .panel-header h2 {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .panel-badge {
+      font-size: 0.72rem;
+      font-weight: 800;
+      background: #fff7e6;
+      color: #8c5a10;
+      border: 1px solid #dfc190;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* LIFO Yığın Görselleştirici */
+    .lifo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 11px 12px 12px;
+    }
+
+    .lifo-col {
+      background: #f9f3e7;
+      border: 1px solid #e3d3ba;
+      border-radius: 10px;
+      padding: 7px 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 112px;
+    }
+
+    .lifo-col-title {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+
+    .lifo-col.target-col {
+      border-color: #c8a25e;
+      background: #fdf6e4;
+    }
+
+    .lifo-stack-items {
+      flex: 1;
+      width: 100%;
+      display: flex;
+      flex-direction: column-reverse;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 3px;
+    }
+
+    .lifo-chip {
+      width: 100%;
+      text-align: center;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #fff;
+      padding: 2px 4px;
+      border-radius: 5px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.18);
+      position: relative;
+    }
+
+    .lifo-chip.top-item::after {
+      content: "ÜST";
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.56rem;
+      background: rgba(0, 0, 0, 0.28);
+      padding: 0 3px;
+      border-radius: 3px;
+      letter-spacing: 0.2px;
+    }
+
+    .lifo-empty {
+      margin: auto;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Algoritma Günlüğü */
+    .log-card {
+      flex: 1;
+      min-height: 220px;
+      max-height: 410px;
+    }
+
+    .log-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      scroll-behavior: smooth;
+    }
+
+    .log-list::-webkit-scrollbar {
+      width: 7px;
+    }
+
+    .log-list::-webkit-scrollbar-thumb {
+      background: #d2bc9b;
+      border-radius: 999px;
+    }
+
+    .log-empty {
+      margin: auto;
+      text-align: center;
+      padding: 22px 14px;
+      color: var(--text-muted);
+      font-size: 0.84rem;
+      line-height: 1.5;
+    }
+
+    .log-item {
+      background: #fbf6ed;
+      border: 1px solid #e7d9c3;
+      border-left: 4px solid #c98a24;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 0.81rem;
+      line-height: 1.38;
+      color: var(--text-primary);
+      animation: fadeSlideIn 0.22s ease;
+    }
+
+    .log-item.latest {
+      background: #fff6e1;
+      border-color: #e6c27b;
+      border-left-color: #1c8c73;
+      font-weight: 600;
+    }
+
+    .log-step {
+      font-weight: 800;
+      color: #8c5a10;
+    }
+
+    .log-disk-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin: 0 3px 0 2px;
+      vertical-align: middle;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Formül Bilgi Kartı */
+    .formula-box {
+      padding: 10px 13px;
+      background: linear-gradient(135deg, #fbf3e2 0%, #f3e4c6 100%);
+      border-top: 1px solid var(--border-warm);
+      font-size: 0.79rem;
+      color: var(--text-secondary);
+      line-height: 1.45;
+    }
+
+    .formula-box strong {
+      color: #7c4d0b;
+    }
+
+    /* ==================== MODALS ==================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(24, 15, 8, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+      animation: modalFade 0.22s ease;
+    }
+
+    @keyframes modalFade {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-card {
+      background: linear-gradient(180deg, #fffcf6 0%, #f7eedf 100%);
+      border: 2px solid #c9943d;
+      border-radius: var(--radius-lg);
+      max-width: 580px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      animation: modalPop 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.92) translateY(14px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-head {
+      padding: 18px 22px 14px;
+      background: linear-gradient(180deg, #3c2718 0%, #2b1b10 100%);
+      color: #fff7e8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid #c98a24;
+    }
+
+    .modal-head h2 {
+      font-size: 1.22rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-close {
+      appearance: none;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      font-size: 1.15rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.18s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    .modal-body {
+      padding: 20px 22px;
+      color: var(--text-primary);
+      line-height: 1.55;
+      font-size: 0.94rem;
+    }
+
+    .rules-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      margin: 12px 0 16px;
+    }
+
+    .rules-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      background: #fffaf0;
+      border: 1px solid #e5d5bc;
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .rule-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ebb247, #b97515);
+      color: #fff;
+      font-weight: 900;
+      font-size: 0.84rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .lifo-callout {
+      background: #edf7f4;
+      border: 1px solid #a9dfd0;
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 0.88rem;
+      color: #135444;
+    }
+
+    .modal-foot {
+      padding: 14px 22px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      border-top: 1px solid #e6d7be;
+      background: #f5ebda;
+    }
+
+    /* Zafer Modalı & Yıldızlar */
+    .victory-center {
+      text-align: center;
+      padding: 6px 0 10px;
+    }
+
+    .stars-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 6px 0 14px;
+    }
+
+    .star-slot {
+      width: 62px;
+      height: 62px;
+      opacity: 0.22;
+      transform: scale(0.75);
+      transition: all 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 4px 8px rgba(180, 118, 12, 0.25));
+    }
+
+    .star-slot.earned {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+
+    .star-slot.mid.earned {
+      transform: scale(1.24) translateY(-6px);
+    }
+
+    .victory-title {
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .victory-desc {
+      font-size: 0.96rem;
+      color: var(--text-secondary);
+      max-width: 460px;
+      margin: 0 auto 16px;
+    }
+
+    .victory-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .v-stat {
+      background: #fffaf0;
+      border: 1px solid #e2d1b7;
+      border-radius: 12px;
+      padding: 10px 8px;
+    }
+
+    .v-stat span {
+      display: block;
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .v-stat strong {
+      display: block;
+      font-size: 1.38rem;
+      font-weight: 900;
+      color: var(--text-primary);
+      margin-top: 2px;
+    }
+
+    /* Konfeti Canvas */
+    #confettiCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 150;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 1060px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+      .side-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .log-card {
+        max-height: 290px;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        padding: 10px 12px;
+        justify-content: center;
+      }
+      .brand {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .hud-strip {
+        grid-template-columns: 1fr 1fr;
+      }
+      .hud-strip .stat-card:last-child {
+        grid-column: 1 / -1;
+      }
+      .side-panel {
+        grid-template-columns: 1fr;
+      }
+      .controls-bar {
+        justify-content: center;
+      }
+      .controls-group {
+        justify-content: center;
+      }
+      .level-btn {
+        padding: 6px 9px;
+        font-size: 0.78rem;
+      }
+      .victory-stats {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- ==================== ÜST MENÜ ==================== -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+          <rect x="3" y="22" width="22" height="3.5" rx="1.75" fill="#3a210c"/>
+          <rect x="12.5" y="4" width="3" height="18" rx="1.5" fill="#5e3614"/>
+          <rect x="6" y="17.2" width="16" height="4.2" rx="2.1" fill="#9b5de5" stroke="#fff" stroke-width="0.9"/>
+          <rect x="8.2" y="12.2" width="11.6" height="4.2" rx="2.1" fill="#2ec4b6" stroke="#fff" stroke-width="0.9"/>
+          <rect x="10.4" y="7.2" width="7.2" height="4.2" rx="2.1" fill="#ff5e62" stroke="#fff" stroke-width="0.9"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Hanoi Kuleleri</h1>
+        <p>Algoritma, Örüntü ve Yığın (LIFO) Atölyesi</p>
+      </div>
+    </div>
+
+    <nav class="level-selector" aria-label="Zorluk Seviyesi Seçimi">
+      <button class="level-btn active" data-disks="3" type="button">
+        <span>1. Seviye (Başlangıç)</span>
+        <small>3 Disk • İdeal: 7 Hamle</small>
+      </button>
+      <button class="level-btn" data-disks="4" type="button">
+        <span>2. Seviye (Orta)</span>
+        <small>4 Disk • İdeal: 15 Hamle</small>
+      </button>
+      <button class="level-btn" data-disks="5" type="button">
+        <span>3. Seviye (Uzman)</span>
+        <small>5 Disk • İdeal: 31 Hamle</small>
+      </button>
+    </nav>
+
+    <div class="header-actions">
+      <button id="soundToggleBtn" class="icon-btn" type="button" title="Ses Efektlerini Aç/Kapat" aria-label="Ses Efektlerini Aç/Kapat">
+        <span id="soundIcon">🔊</span>
+        <span id="soundLabel">Ses Açık</span>
+      </button>
+      <button id="helpBtn" class="icon-btn help-btn" type="button" title="Nasıl Oynanır?" aria-label="Nasıl Oynanır?">?</button>
+    </div>
+  </header>
+
+  <!-- ==================== ANA ÇALIŞMA ALANI ==================== -->
+  <main class="workspace">
+    <!-- SOL / MERKEZ: OYUN SAHNESİ -->
+    <section class="stage-column">
+      <!-- HUD İSTATİSTİKLERİ -->
+      <div class="hud-strip">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Yapılan Hamle</div>
+            <div class="stat-value" id="moveCountDisplay">0</div>
+          </div>
+          <div class="stat-sub" id="extraMovesNote">Hedefe hazır</div>
+        </div>
+
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">En Kısa Yol (İdeal)</div>
+            <div class="stat-value" id="idealMovesDisplay">7</div>
+          </div>
+          <div class="formula-pill" id="formulaDisplay">2³ - 1 = 7</div>
+        </div>
+
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Optimizasyon Durumu</div>
+            <div class="stat-sub" id="goalSummary">A Sütunu → C Sütunu</div>
+          </div>
+          <span class="status-badge optimal" id="statusBadge">İdeal Yolda</span>
+        </div>
+      </div>
+
+      <!-- AKILLI GERİ BİLDİRİM BANDI -->
+      <div class="feedback-bar" id="feedbackBar" role="status" aria-live="polite">
+        <span class="fb-icon" id="feedbackIcon">i</span>
+        <span id="feedbackText">A Sütunundaki en üst diski tıklayarak seçin veya hedef sütuna sürükleyip bırakın.</span>
+      </div>
+
+      <!-- VEKTÖREL ANTİK TAPINAK OYUN SAHNESİ (SVG) -->
+      <div class="board-frame">
+        <svg id="gameSvg" viewBox="0 0 960 470" xmlns="http://www.w3.org/2000/svg" role="application" aria-label="Hanoi Kuleleri Oyun Tahtası">
+          <defs>
+            <!-- Tapınak Gökyüzü ve Atmosfer -->
+            <linearGradient id="templeSky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f7e3bd"/>
+              <stop offset="42%" stop-color="#f2cf97"/>
+              <stop offset="78%" stop-color="#dfaf74"/>
+              <stop offset="100%" stop-color="#b9814c"/>
+            </linearGradient>
+
+            <radialGradient id="sunGlow" cx="50%" cy="22%" r="52%">
+              <stop offset="0%" stop-color="#fff8de" stop-opacity="0.92"/>
+              <stop offset="45%" stop-color="#ffe09e" stop-opacity="0.38"/>
+              <stop offset="100%" stop-color="#f0b668" stop-opacity="0"/>
+            </radialGradient>
+
+            <!-- Antik Taş Dokusu Gradyanları -->
+            <linearGradient id="stoneArch" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#d7b485" stop-opacity="0.62"/>
+              <stop offset="100%" stop-color="#9e7448" stop-opacity="0.72"/>
+            </linearGradient>
+
+            <linearGradient id="stoneFloor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c39a6b"/>
+              <stop offset="100%" stop-color="#87613d"/>
+            </linearGradient>
+
+            <!-- Ahşap Platform Gradyanları -->
+            <linearGradient id="woodTop" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#a86d3b"/>
+              <stop offset="45%" stop-color="#875024"/>
+              <stop offset="100%" stop-color="#693b17"/>
+            </linearGradient>
+
+            <linearGradient id="woodFront" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6d3d19"/>
+              <stop offset="22%" stop-color="#5a3012"/>
+              <stop offset="85%" stop-color="#43220b"/>
+              <stop offset="100%" stop-color="#2f1706"/>
+            </linearGradient>
+
+            <!-- Parlak Pirinç / Altın Sütun Gradyanları -->
+            <linearGradient id="rodMetallic" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stop-color="#8d5c1a"/>
+              <stop offset="22%" stop-color="#e3b156"/>
+              <stop offset="40%" stop-color="#fff2c2"/>
+              <stop offset="62%" stop-color="#cfa043"/>
+              <stop offset="85%" stop-color="#7c4e13"/>
+              <stop offset="100%" stop-color="#5a3609"/>
+            </linearGradient>
+
+            <linearGradient id="rodCap" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#fff4c7"/>
+              <stop offset="45%" stop-color="#d89e36"/>
+              <stop offset="100%" stop-color="#6d430f"/>
+            </linearGradient>
+
+            <linearGradient id="plaqueBrass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#f7da95"/>
+              <stop offset="50%" stop-color="#d29a3b"/>
+              <stop offset="100%" stop-color="#9e6c1c"/>
+            </linearGradient>
+
+            <!-- 5 Canlı Mücevher Disk Gradyanı -->
+            <!-- Disk 1: Yakut Mercan -->
+            <linearGradient id="diskGrad1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff8a8c"/>
+              <stop offset="28%" stop-color="#f24957"/>
+              <stop offset="78%" stop-color="#c91f37"/>
+              <stop offset="100%" stop-color="#8f1224"/>
+            </linearGradient>
+            <!-- Disk 2: Altın Kehribar -->
+            <linearGradient id="diskGrad2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffd275"/>
+              <stop offset="28%" stop-color="#f59e1b"/>
+              <stop offset="78%" stop-color="#cc6d00"/>
+              <stop offset="100%" stop-color="#944a00"/>
+            </linearGradient>
+            <!-- Disk 3: Zümrüt Yeşili -->
+            <linearGradient id="diskGrad3" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#6ee7d8"/>
+              <stop offset="28%" stop-color="#22b59e"/>
+              <stop offset="78%" stop-color="#118373"/>
+              <stop offset="100%" stop-color="#0a594e"/>
+            </linearGradient>
+            <!-- Disk 4: Safir Mavisi -->
+            <linearGradient id="diskGrad4" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#7cb4ff"/>
+              <stop offset="28%" stop-color="#327af0"/>
+              <stop offset="78%" stop-color="#1c50bd"/>
+              <stop offset="100%" stop-color="#113482"/>
+            </linearGradient>
+            <!-- Disk 5: Ametist Moru -->
+            <linearGradient id="diskGrad5" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#c99bff"/>
+              <stop offset="28%" stop-color="#8f4de3"/>
+              <stop offset="78%" stop-color="#6127b0"/>
+              <stop offset="100%" stop-color="#41177a"/>
+            </linearGradient>
+
+            <!-- Üst Parlama Yansıması -->
+            <linearGradient id="diskGloss" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ffffff" stop-opacity="0.56"/>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+            </linearGradient>
+
+            <!-- Filtreler -->
+            <filter id="diskShadow" x="-15%" y="-20%" width="130%" height="160%">
+              <feDropShadow dx="0" dy="5" stdDeviation="3.5" flood-color="#241205" flood-opacity="0.42"/>
+            </filter>
+
+            <filter id="selectedGlow" x="-25%" y="-35%" width="150%" height="180%">
+              <feDropShadow dx="0" dy="0" stdDeviation="7" flood-color="#ffd56b" flood-opacity="0.95"/>
+              <feDropShadow dx="0" dy="10" stdDeviation="6" flood-color="#291505" flood-opacity="0.38"/>
+            </filter>
+
+            <filter id="errorGlow" x="-28%" y="-40%" width="156%" height="190%">
+              <feDropShadow dx="0" dy="0" stdDeviation="9" flood-color="#ff2e2e" flood-opacity="0.98"/>
+            </filter>
+
+            <filter id="hintGlow" x="-25%" y="-35%" width="150%" height="170%">
+              <feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="#ffe175" flood-opacity="0.9"/>
+            </filter>
+          </defs>
+
+          <!-- 1. ARKA PLAN: ANTİK TAPINAK ATMOSFERİ -->
+          <rect x="0" y="0" width="960" height="470" fill="url(#templeSky)"/>
+          <ellipse cx="480" cy="110" rx="420" ry="210" fill="url(#sunGlow)"/>
+
+          <!-- Uzak Antik Tapınak Kemerleri ve Sütun Siluetleri -->
+          <g opacity="0.52">
+            <!-- Arka kemer duvarı -->
+            <path d="M 40 365 L 40 90 L 920 90 L 920 365 L 845 365 L 845 205 A 75 75 0 0 0 695 205 L 695 365 L 555 365 L 555 190 A 75 75 0 0 0 405 190 L 405 365 L 265 365 L 265 205 A 75 75 0 0 0 115 205 L 115 365 Z" fill="url(#stoneArch)"/>
+            <!-- Üst alınlık friz çizgisi -->
+            <rect x="26" y="70" width="908" height="22" rx="4" fill="#bd9565"/>
+            <rect x="38" y="62" width="884" height="10" rx="3" fill="#cfab7c"/>
+            <!-- Yan oyma taş sütunlar -->
+            <rect x="46" y="92" width="38" height="273" fill="#b78d5d"/>
+            <rect x="54" y="92" width="8" height="273" fill="#d9b789" opacity="0.5"/>
+            <rect x="876" y="92" width="38" height="273" fill="#b78d5d"/>
+            <rect x="884" y="92" width="8" height="273" fill="#d9b789" opacity="0.5"/>
+          </g>
+
+          <!-- Hafif Güneş Huzmeleri -->
+          <g opacity="0.18" pointer-events="none">
+            <polygon points="310,0 440,0 320,375 140,375" fill="#fff7d6"/>
+            <polygon points="520,0 640,0 790,375 615,375" fill="#fff7d6"/>
+          </g>
+
+          <!-- Taş Zemin -->
+          <rect x="0" y="362" width="960" height="108" fill="url(#stoneFloor)"/>
+          <line x1="0" y1="362" x2="960" y2="362" stroke="#ebd1a7" stroke-width="2" opacity="0.65"/>
+          <!-- Zemin taş derzleri -->
+          <g stroke="#734f2f" stroke-width="1.2" opacity="0.32">
+            <line x1="160" y1="362" x2="95" y2="470"/>
+            <line x1="360" y1="362" x2="335" y2="470"/>
+            <line x1="600" y1="362" x2="625" y2="470"/>
+            <line x1="800" y1="362" x2="865" y2="470"/>
+          </g>
+
+          <!-- Platform Gölgesi -->
+          <ellipse cx="480" cy="442" rx="432" ry="20" fill="#2c1607" opacity="0.38"/>
+
+          <!-- 2. AHŞAP PLATFORM (3D EĞİMLİ & DAMARLI) -->
+          <g id="woodenPlatform">
+            <!-- Üst yüzey (trapez 3D perspektif) -->
+            <polygon points="74,358 886,358 914,394 46,394" fill="url(#woodTop)" stroke="#c78d52" stroke-width="1.5"/>
+            <!-- Ahşap damar çizgileri (üst) -->
+            <g stroke="#4f290e" stroke-width="1.4" opacity="0.28" fill="none">
+              <path d="M 96 368 Q 310 363 540 370 T 870 367"/>
+              <path d="M 75 381 Q 270 387 490 379 T 892 383"/>
+            </g>
+            <!-- Ön kalın yüz -->
+            <rect x="46" y="394" width="868" height="46" rx="8" fill="url(#woodFront)" stroke="#8b5526" stroke-width="1.5"/>
+            <!-- Üst ön kenar ışık şeridi -->
+            <line x1="52" y1="396" x2="908" y2="396" stroke="#d99f62" stroke-width="2" opacity="0.65"/>
+            <!-- Ahşap damar çizgileri (ön) -->
+            <g stroke="#291204" stroke-width="1.5" opacity="0.35" fill="none">
+              <path d="M 65 408 Q 220 403 390 411 T 720 407 T 895 410"/>
+              <path d="M 60 426 Q 280 432 510 423 T 895 427"/>
+            </g>
+            <!-- Köşe pirinç perçinler -->
+            <circle cx="68" cy="417" r="5" fill="url(#rodCap)" stroke="#4c2c0a" stroke-width="1"/>
+            <circle cx="892" cy="417" r="5" fill="url(#rodCap)" stroke="#4c2c0a" stroke-width="1"/>
+          </g>
+
+          <!-- 3. SÜTUN VURGULARI (Sürükleme / İpucu / Seçim) -->
+          <g id="pegHighlightsLayer">
+            <rect id="pegHighlight0" x="88" y="88" width="214" height="292" rx="18" fill="#ffe184" fill-opacity="0" stroke="#ffd25a" stroke-width="3" stroke-dasharray="9 6" stroke-opacity="0"/>
+            <rect id="pegHighlight1" x="373" y="88" width="214" height="292" rx="18" fill="#ffe184" fill-opacity="0" stroke="#ffd25a" stroke-width="3" stroke-dasharray="9 6" stroke-opacity="0"/>
+            <rect id="pegHighlight2" x="658" y="88" width="214" height="292" rx="18" fill="#ffe184" fill-opacity="0" stroke="#ffd25a" stroke-width="3" stroke-dasharray="9 6" stroke-opacity="0"/>
+          </g>
+
+          <!-- 4. ÜÇ PARLAK PİRİNÇ SÜTUN (A, B, C) -->
+          <g id="pegsLayer">
+            <!-- A SÜTUNU (x = 195) -->
+            <g class="peg-visual" data-peg="0">
+              <ellipse cx="195" cy="376" rx="46" ry="10" fill="#3a1c08" opacity="0.52"/>
+              <rect x="184" y="138" width="22" height="236" rx="9" fill="url(#rodMetallic)" stroke="#6c4410" stroke-width="1"/>
+              <!-- Sütun üst kubbe (finial) -->
+              <ellipse cx="195" cy="138" rx="14" ry="7" fill="url(#rodCap)" stroke="#6c4410" stroke-width="1"/>
+              <circle cx="195" cy="128" r="9" fill="url(#rodCap)" stroke="#6c4410" stroke-width="1"/>
+              <!-- Taban yüzüğü (collar) -->
+              <ellipse cx="195" cy="374" rx="28" ry="8" fill="url(#rodCap)" stroke="#5c360c" stroke-width="1.2"/>
+              <!-- İsim Plakası -->
+              <rect x="112" y="403" width="166" height="29" rx="7" fill="url(#plaqueBrass)" stroke="#5e3a0c" stroke-width="1.4"/>
+              <text x="195" y="422" text-anchor="middle" font-size="14.5" font-weight="900" fill="#2c1806" letter-spacing="0.4">A SÜTUNU</text>
+              <text x="195" y="346" text-anchor="middle" font-size="10.5" font-weight="800" fill="#5e391a" opacity="0.0">Başlangıç</text>
+            </g>
+
+            <!-- B SÜTUNU (x = 480) -->
+            <g class="peg-visual" data-peg="1">
+              <ellipse cx="480" cy="376" rx="46" ry="10" fill="#3a1c08" opacity="0.52"/>
+              <rect x="469" y="138" width="22" height="236" rx="9" fill="url(#rodMetallic)" stroke="#6c4410" stroke-width="1"/>
+              <ellipse cx="480" cy="138" rx="14" ry="7" fill="url(#rodCap)" stroke="#6c4410" stroke-width="1"/>
+              <circle cx="480" cy="128" r="9" fill="url(#rodCap)" stroke="#6c4410" stroke-width="1"/>
+              <ellipse cx="480" cy="374" rx="28" ry="8" fill="url(#rodCap)" stroke="#5c360c" stroke-width="1.2"/>
+              <rect x="397" y="403" width="166" height="29" rx="7" fill="url(#plaqueBrass)" stroke="#5e3a0c" stroke-width="1.4"/>
+              <text x="480" y="422" text-anchor="middle" font-size="14.5" font-weight="900" fill="#2c1806" letter-spacing="0.4">B SÜTUNU</text>
+            </g>
+
+            <!-- C SÜTUNU (HEDEF) (x = 765) -->
+            <g class="peg-visual" data-peg="2">
+              <ellipse cx="765" cy="376" rx="46" ry="10" fill="#3a1c08" opacity="0.52"/>
+              <rect x="754" y="138" width="22" height="236" rx="9" fill="url(#rodMetallic)" stroke="#6c4410" stroke-width="1"/>
+              <ellipse cx="765" cy="138" rx="14" ry="7" fill="url(#rodCap)" stroke="#6c4410" stroke-width="1"/>
+              <circle cx="765" cy="128" r="9" fill="url(#rodCap)" stroke="#6c4410" stroke-width="1"/>
+              <ellipse cx="765" cy="374" rx="28" ry="8" fill="url(#rodCap)" stroke="#5c360c" stroke-width="1.2"/>
+              <!-- Hedef Rozeti (C sütunu tepesinde küçük şık rozet) -->
+              <rect x="721" y="22" width="88" height="24" rx="12" fill="#1b7f69" stroke="#d8fff5" stroke-width="1.5"/>
+              <text x="765" y="38" text-anchor="middle" font-size="11.5" font-weight="800" fill="#ffffff">★ HEDEF</text>
+              <rect x="682" y="403" width="166" height="29" rx="7" fill="url(#plaqueBrass)" stroke="#5e3a0c" stroke-width="1.4"/>
+              <text x="765" y="422" text-anchor="middle" font-size="14.5" font-weight="900" fill="#2c1806" letter-spacing="0.4">C SÜTUNU ★</text>
+            </g>
+          </g>
+
+          <!-- 5. TIKLANABİLİR SÜTUN ALANLARI (Disklerin altında, sütuna tıklamayı yakalar) -->
+          <g id="pegHitZones">
+            <rect class="peg-hit-zone" data-peg="0" x="72" y="75" width="246" height="365" fill="transparent"/>
+            <rect class="peg-hit-zone" data-peg="1" x="357" y="75" width="246" height="365" fill="transparent"/>
+            <rect class="peg-hit-zone" data-peg="2" x="642" y="75" width="246" height="365" fill="transparent"/>
+          </g>
+
+          <!-- 6. DİNAMİK DİSKLER KATMANI -->
+          <g id="disksLayer"></g>
+
+          <!-- 7. İPUCU KAVİSLİ OK KATMANI -->
+          <g id="hintOverlay" pointer-events="none" opacity="0">
+            <path id="hintArcPath" d="" fill="none" stroke="#ffd859" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 8" filter="url(#hintGlow)"/>
+            <polygon id="hintArrowHead" points="0,0 -14,-8 -14,8" fill="#ffe47a" stroke="#7d4d07" stroke-width="1.5"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- ALT KONTROL ÇUBUĞU -->
+      <div class="controls-bar">
+        <div class="controls-group">
+          <button id="undoBtn" class="btn btn-secondary" type="button" disabled title="Son hamleyi geri al">
+            ↩ Geri Al
+          </button>
+          <button id="hintBtn" class="btn btn-primary" type="button" title="Mevcut durumdan en kısa sonraki adımı göster">
+            💡 Sonraki İdeal Hamleyi Göster
+          </button>
+        </div>
+
+        <div class="controls-group">
+          <button id="simulateBtn" class="btn btn-emerald" type="button" title="Bilgisayarın en kısa yoldan çözümünü adım adım izle">
+            ▶ Çözümü Simüle Et
+          </button>
+          <div class="speed-control" id="speedControl">
+            <label for="simSpeedSelect">Hız:</label>
+            <select id="simSpeedSelect">
+              <option value="slow">Yavaş</option>
+              <option value="normal" selected>Normal</option>
+              <option value="fast">Hızlı</option>
+            </select>
+          </div>
+          <button id="resetBtn" class="btn btn-danger-soft" type="button" title="Seviyeyi baştan başlat">
+            ↻ Yeniden Başlat
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- SAĞ PANEL: YIĞIN (LIFO) & ALGORİTMA GÜNLÜĞÜ -->
+    <aside class="side-panel">
+      <!-- Canlı Yığın (LIFO) Görünümü -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <h2>📚 Yığın (LIFO) Durumu</h2>
+          <span class="panel-badge">Son Giren İlk Çıkar</span>
+        </div>
+        <div class="lifo-grid" id="lifoGrid">
+          <div class="lifo-col" id="lifoCol0">
+            <div class="lifo-col-title">A SÜTUNU</div>
+            <div class="lifo-stack-items" id="lifoStack0"></div>
+          </div>
+          <div class="lifo-col" id="lifoCol1">
+            <div class="lifo-col-title">B SÜTUNU</div>
+            <div class="lifo-stack-items" id="lifoStack1"></div>
+          </div>
+          <div class="lifo-col target-col" id="lifoCol2">
+            <div class="lifo-col-title">C SÜTUNU ★</div>
+            <div class="lifo-stack-items" id="lifoStack2"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Algoritma Günlüğü -->
+      <div class="panel-card log-card">
+        <div class="panel-header">
+          <h2>📝 Algoritma Günlüğü</h2>
+          <span class="panel-badge" id="logCountBadge">0 Adım</span>
+        </div>
+        <div class="log-list" id="logList">
+          <div class="log-empty">
+            Henüz hamle yapılmadı.<br/>
+            Yaptığınız her hamle burada adım adım kaydedilecektir.
+          </div>
+        </div>
+        <div class="formula-box" id="formulaInfoBox">
+          <strong>Örüntü İpucu:</strong> <strong>3 disk</strong> için en kısa çözüm
+          <strong>2³ − 1 = 7</strong> hamledir. Her yeni disk eklendiğinde hamle sayısı yaklaşık iki katına çıkar!
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ==================== AÇILIŞ / YARDIM MODALI ==================== -->
+  <div class="modal-backdrop open" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="helpModalTitle">🏛️ Hanoi Kuleleri — Nasıl Oynanır?</h2>
+        <button class="modal-close" id="closeHelpX" type="button" aria-label="Pencereyi Kapat">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>
+          <strong>Hanoi Kuleleri</strong>, algoritma kurma, örüntü tanıma ve <strong>Yığın (LIFO)</strong>
+          veri yapısını keşfetmenizi sağlayan klasik bir optimizasyon bulmacasıdır.
+        </p>
+        <ul class="rules-list">
+          <li>
+            <span class="rule-num">1</span>
+            <div><strong>Amaç:</strong> <strong>A Sütunu</strong> üzerindeki tüm diskleri, aynı sırayı koruyarak <strong>C Sütununa</strong> taşımaktır.</div>
+          </li>
+          <li>
+            <span class="rule-num">2</span>
+            <div><strong>Yığın (LIFO) Mantığı:</strong> Her hamlede yalnızca bir sütunun <strong>en üstündeki tek bir disk</strong> hareket ettirilebilir (<em>Son Giren İlk Çıkar</em>).</div>
+          </li>
+          <li>
+            <span class="rule-num">3</span>
+            <div><strong>Boyut Kuralı:</strong> Büyük numaralı bir disk, hiçbir zaman kendisinden daha küçük numaralı bir diskin üzerine konulamaz.</div>
+          </li>
+          <li>
+            <span class="rule-num">4</span>
+            <div><strong>Kolay Kontrol:</strong> Sütunlara sırayla tıklayarak (<em>kaynak sütun → hedef sütun</em>) ya da en üstteki diski doğrudan <strong>sürükleyip bırakarak</strong> oynayabilirsiniz.</div>
+          </li>
+          <li>
+            <span class="rule-num">5</span>
+            <div><strong>En Kısa Yol Hedefi:</strong> <em>n</em> adet disk için ideal hamle sayısı <strong>2ⁿ − 1</strong>'dir. İdeal hamlede bitirerek <strong>3 Yıldız</strong> kazanın!</div>
+          </li>
+        </ul>
+        <div class="lifo-callout">
+          💡 <strong>Algoritma Desteği:</strong> Takıldığınızda <em>"Sonraki İdeal Hamleyi Göster"</em> ile ipucu alabilir veya <em>"Çözümü Simüle Et"</em> ile bilgisayarın en kısa yoldan çözümünü adım adım izleyebilirsiniz.
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-primary" id="startGameBtn" type="button">Oyuna Başla</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ZAFER / TAMAMLAMA MODALI ==================== -->
+  <div class="modal-backdrop" id="victoryModal" role="dialog" aria-modal="true" aria-labelledby="victoryTitle">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="victoryModalHeader">🏆 Bulmaca Tamamlandı!</h2>
+        <button class="modal-close" id="closeVictoryX" type="button" aria-label="Pencereyi Kapat">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="victory-center">
+          <div class="stars-row" id="victoryStars">
+            <svg class="star-slot" id="star1" viewBox="0 0 64 64">
+              <polygon points="32,4 40,22 60,24 45,37 49,57 32,47 15,57 19,37 4,24 24,22" fill="#f5b82e" stroke="#a6680a" stroke-width="2.5" stroke-linejoin="round"/>
+            </svg>
+            <svg class="star-slot mid" id="star2" viewBox="0 0 64 64">
+              <polygon points="32,4 40,22 60,24 45,37 49,57 32,47 15,57 19,37 4,24 24,22" fill="#f5b82e" stroke="#a6680a" stroke-width="2.5" stroke-linejoin="round"/>
+            </svg>
+            <svg class="star-slot" id="star3" viewBox="0 0 64 64">
+              <polygon points="32,4 40,22 60,24 45,37 49,57 32,47 15,57 19,37 4,24 24,22" fill="#f5b82e" stroke="#a6680a" stroke-width="2.5" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="victory-title" id="victoryTitle">Tebrikler!</div>
+          <p class="victory-desc" id="victoryDesc"></p>
+
+          <div class="victory-stats">
+            <div class="v-stat">
+              <span>Yapılan Hamle</span>
+              <strong id="vMoves">7</strong>
+            </div>
+            <div class="v-stat">
+              <span>İdeal Hamle (2ⁿ−1)</span>
+              <strong id="vIdeal">7</strong>
+            </div>
+            <div class="v-stat">
+              <span>Fazla Hamle</span>
+              <strong id="vExtra">0</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-secondary" id="victoryCloseBtn" type="button">Günlüğü İncele</button>
+        <button class="btn btn-primary" id="victoryReplayBtn" type="button">↻ Tekrar Oyna</button>
+        <button class="btn btn-emerald" id="victoryNextBtn" type="button">Sonraki Seviye ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      /* ============================================================
+         1. SABİTLER & GEOMETRİ AYARLARI
+         ============================================================ */
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const PEG_NAMES = ["A", "B", "C"];
+      const PEG_FULL_NAMES = ["A Sütunu", "B Sütunu", "C Sütunu"];
+      const PEG_FROM_NAMES = ["A Sütunundan", "B Sütunundan", "C Sütunundan"];
+      const PEG_TO_NAMES = ["A Sütununa", "B Sütununa", "C Sütununa"];
+      const PEG_X = [195, 480, 765];
+      const BASE_Y = 368;        // En alttaki diskin taban y koordinatı
+      const DISK_HEIGHT = 36;    // Her diskin yüksekliği
+      const DISK_GAP = 2;        // Diskler arası ince gölge aralığı
+      const LIFT_Y = 92;         // Seçili / havada süzülen diskin y merkezi
+
+      const DISK_COLORS = {
+        1: { grad: "url(#diskGrad1)", solid: "#e03144", stroke: "#8c1022" },
+        2: { grad: "url(#diskGrad2)", solid: "#e5890a", stroke: "#8f4a00" },
+        3: { grad: "url(#diskGrad3)", solid: "#199c87", stroke: "#0a574b" },
+        4: { grad: "url(#diskGrad4)", solid: "#2663d6", stroke: "#10327d" },
+        5: { grad: "url(#diskGrad5)", solid: "#7a39cc", stroke: "#3e1573" }
+      };
+
+      const SUPERSCRIPTS = { 3: "³", 4: "⁴", 5: "⁵" };
+
+      /* ============================================================
+         2. WEB AUDIO API — SENTEZLENMİŞ SES MOTORU (HARİCİ DOSYASIZ)
+         ============================================================ */
+      class SoundEngine {
+        constructor() {
+          this.enabled = true;
+          this.ctx = null;
+        }
+
+        ensureContext() {
+          if (!this.enabled) return null;
+          if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return null;
+            this.ctx = new AudioCtx();
+          }
+          if (this.ctx.state === "suspended") {
+            this.ctx.resume().catch(() => {});
+          }
+          return this.ctx;
+        }
+
+        // Diski seçip kaldırma sesi (hafif ahşap tık + yukarı kayma)
+        playPick(diskSize = 1) {
+          const ctx = this.ensureContext();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const baseFreq = 340 + (6 - diskSize) * 42;
+
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(baseFreq * 0.85, now);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.25, now + 0.085);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(0.14, now + 0.012);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.095);
+
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.1);
+        }
+
+        // Ahşap disk çarpma / yerine oturma sesi (disk büyüdükçe daha tok!)
+        playWoodDrop(diskSize = 3) {
+          const ctx = this.ensureContext();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+
+          // 1) Ahşap gövde rezonansı
+          const bodyFreq = 260 - diskSize * 24;
+          const osc = ctx.createOscillator();
+          const oscGain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(bodyFreq * 1.45, now);
+          osc.frequency.exponentialRampToValueAtTime(bodyFreq * 0.72, now + 0.11);
+
+          oscGain.gain.setValueAtTime(0.001, now);
+          oscGain.gain.linearRampToValueAtTime(0.26, now + 0.006);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+          osc.connect(oscGain);
+          oscGain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+
+          // 2) Ahşap temas çıtırtısı (filtreli kısa gürültü)
+          const bufferSize = Math.floor(ctx.sampleRate * 0.045);
+          const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+          const data = buffer.getChannelData(0);
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.25));
+          }
+          const noise = ctx.createBufferSource();
+          noise.buffer = buffer;
+
+          const filter = ctx.createBiquadFilter();
+          filter.type = "bandpass";
+          filter.frequency.setValueAtTime(950 + (6 - diskSize) * 160, now);
+          filter.Q.setValueAtTime(2.6, now);
+
+          const noiseGain = ctx.createGain();
+          noiseGain.gain.setValueAtTime(0.22, now);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+
+          noise.connect(filter);
+          filter.connect(noiseGain);
+          noiseGain.connect(ctx.destination);
+          noise.start(now);
+        }
+
+        // Kural ihlali hata uyarısı
+        playError() {
+          const ctx = this.ensureContext();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+
+          [0, 0.11].forEach((offset, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sawtooth";
+            const f = idx === 0 ? 195 : 155;
+            osc.frequency.setValueAtTime(f, now + offset);
+            osc.frequency.linearRampToValueAtTime(f * 0.88, now + offset + 0.09);
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = "lowpass";
+            filter.frequency.setValueAtTime(680, now + offset);
+
+            gain.gain.setValueAtTime(0.001, now + offset);
+            gain.gain.linearRampToValueAtTime(0.14, now + offset + 0.012);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.1);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + offset);
+            osc.stop(now + offset + 0.11);
+          });
+        }
+
+        // İpucu nazik zil tınısı
+        playHint() {
+          const ctx = this.ensureContext();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          [587.33, 880].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now + i * 0.07);
+            gain.gain.setValueAtTime(0.001, now + i * 0.07);
+            gain.gain.linearRampToValueAtTime(0.12, now + i * 0.07 + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.28);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i * 0.07);
+            osc.stop(now + i * 0.07 + 0.3);
+          });
+        }
+
+        // Zafer başarı melodisi
+        playVictory() {
+          const ctx = this.ensureContext();
+          if (!ctx) return;
+          const now = ctx.currentTime;
+          const notes = [523.25, 659.25, 783.99, 1046.5, 987.77, 1046.5];
+          const times = [0, 0.1, 0.2, 0.32, 0.46, 0.56];
+          const durs  = [0.22, 0.22, 0.24, 0.25, 0.16, 0.65];
+
+          notes.forEach((freq, i) => {
+            const t = now + times[i];
+            const osc = ctx.createOscillator();
+            const osc2 = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = "triangle";
+            osc2.type = "sine";
+            osc.frequency.setValueAtTime(freq, t);
+            osc2.frequency.setValueAtTime(freq * 2, t);
+
+            gain.gain.setValueAtTime(0.001, t);
+            gain.gain.linearRampToValueAtTime(0.16, t + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + durs[i]);
+
+            const g2 = ctx.createGain();
+            g2.gain.setValueAtTime(0.045, t);
+            g2.gain.exponentialRampToValueAtTime(0.001, t + durs[i] * 0.7);
+
+            osc.connect(gain);
+            osc2.connect(g2);
+            g2.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(t);
+            osc2.start(t);
+            osc.stop(t + durs[i] + 0.02);
+            osc2.stop(t + durs[i] + 0.02);
+          });
+        }
+      }
+
+      const sound = new SoundEngine();
+
+      /* ============================================================
+         3. KONFETİ MOTORU (CANVAS)
+         ============================================================ */
+      class ConfettiEngine {
+        constructor(canvas) {
+          this.canvas = canvas;
+          this.ctx = canvas.getContext("2d");
+          this.particles = [];
+          this.rafId = null;
+          this.resize();
+          window.addEventListener("resize", () => this.resize());
+        }
+
+        resize() {
+          this.canvas.width = window.innerWidth;
+          this.canvas.height = window.innerHeight;
+        }
+
+        burst() {
+          this.particles = [];
+          const palette = ["#ff5e62", "#f5b82e", "#2ec4b6", "#3a86ff", "#9b5de5", "#ffe066", "#ff9f1c"];
+          const count = 150;
+          for (let i = 0; i < count; i++) {
+            const fromLeft = i % 2 === 0;
+            const startX = fromLeft ? this.canvas.width * 0.18 : this.canvas.width * 0.82;
+            const startY = this.canvas.height * 0.62;
+            const angle = fromLeft
+              ? -Math.PI / 2 + (Math.random() * 0.9 - 0.15)
+              : -Math.PI / 2 - (Math.random() * 0.9 - 0.15);
+            const speed = 8 + Math.random() * 13;
+            this.particles.push({
+              x: startX + (Math.random() * 80 - 40),
+              y: startY + (Math.random() * 40 - 20),
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed - Math.random() * 4,
+              w: 7 + Math.random() * 7,
+              h: 4 + Math.random() * 6,
+              color: palette[Math.floor(Math.random() * palette.length)],
+              rot: Math.random() * Math.PI * 2,
+              vrot: (Math.random() - 0.5) * 0.25,
+              gravity: 0.28 + Math.random() * 0.1,
+              alpha: 1
+            });
+          }
+          if (!this.rafId) this.loop();
+        }
+
+        stop() {
+          this.particles = [];
+          if (this.rafId) {
+            cancelAnimationFrame(this.rafId);
+            this.rafId = null;
+          }
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        loop() {
+          const ctx = this.ctx;
+          ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          let alive = 0;
+
+          for (const p of this.particles) {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += p.gravity;
+            p.vx *= 0.992;
+            p.rot += p.vrot;
+            if (p.y > this.canvas.height * 0.78) {
+              p.alpha -= 0.022;
+            }
+            if (p.alpha > 0.01 && p.y < this.canvas.height + 40) {
+              alive++;
+              ctx.save();
+              ctx.globalAlpha = Math.max(0, p.alpha);
+              ctx.translate(p.x, p.y);
+              ctx.rotate(p.rot);
+              ctx.fillStyle = p.color;
+              ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+              ctx.restore();
+            }
+          }
+
+          if (alive > 0) {
+            this.rafId = requestAnimationFrame(() => this.loop());
+          } else {
+            this.rafId = null;
+            ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          }
+        }
+      }
+
+      const confetti = new ConfettiEngine(document.getElementById("confettiCanvas"));
+
+      /* ============================================================
+         4. DOM REFERANSLARI
+         ============================================================ */
+      const gameSvg = document.getElementById("gameSvg");
+      const disksLayer = document.getElementById("disksLayer");
+      const hintOverlay = document.getElementById("hintOverlay");
+      const hintArcPath = document.getElementById("hintArcPath");
+      const hintArrowHead = document.getElementById("hintArrowHead");
+      const pegHighlights = [
+        document.getElementById("pegHighlight0"),
+        document.getElementById("pegHighlight1"),
+        document.getElementById("pegHighlight2")
+      ];
+
+      const moveCountDisplay = document.getElementById("moveCountDisplay");
+      const extraMovesNote = document.getElementById("extraMovesNote");
+      const idealMovesDisplay = document.getElementById("idealMovesDisplay");
+      const formulaDisplay = document.getElementById("formulaDisplay");
+      const statusBadge = document.getElementById("statusBadge");
+      const feedbackBar = document.getElementById("feedbackBar");
+      const feedbackIcon = document.getElementById("feedbackIcon");
+      const feedbackText = document.getElementById("feedbackText");
+      const logList = document.getElementById("logList");
+      const logCountBadge = document.getElementById("logCountBadge");
+      const formulaInfoBox = document.getElementById("formulaInfoBox");
+
+      const levelBtns = document.querySelectorAll(".level-btn");
+      const undoBtn = document.getElementById("undoBtn");
+      const hintBtn = document.getElementById("hintBtn");
+      const simulateBtn = document.getElementById("simulateBtn");
+      const speedControl = document.getElementById("speedControl");
+      const simSpeedSelect = document.getElementById("simSpeedSelect");
+      const resetBtn = document.getElementById("resetBtn");
+      const soundToggleBtn = document.getElementById("soundToggleBtn");
+      const soundIcon = document.getElementById("soundIcon");
+      const soundLabel = document.getElementById("soundLabel");
+      const helpBtn = document.getElementById("helpBtn");
+
+      const helpModal = document.getElementById("helpModal");
+      const closeHelpX = document.getElementById("closeHelpX");
+      const startGameBtn = document.getElementById("startGameBtn");
+
+      const victoryModal = document.getElementById("victoryModal");
+      const closeVictoryX = document.getElementById("closeVictoryX");
+      const victoryModalHeader = document.getElementById("victoryModalHeader");
+      const victoryTitle = document.getElementById("victoryTitle");
+      const victoryDesc = document.getElementById("victoryDesc");
+      const vMoves = document.getElementById("vMoves");
+      const vIdeal = document.getElementById("vIdeal");
+      const vExtra = document.getElementById("vExtra");
+      const victoryStars = [
+        document.getElementById("star1"),
+        document.getElementById("star2"),
+        document.getElementById("star3")
+      ];
+      const victoryCloseBtn = document.getElementById("victoryCloseBtn");
+      const victoryReplayBtn = document.getElementById("victoryReplayBtn");
+      const victoryNextBtn = document.getElementById("victoryNextBtn");
+
+      /* ============================================================
+         5. OYUN DURUMU (STATE)
+         ============================================================ */
+      const state = {
+        numDisks: 3,
+        pegs: [[], [], []],     // Her sütun alttan üste doğru disk numaralarını tutar (örn. [3, 2, 1])
+        diskEls: new Map(),     // diskId -> { g, x, y, width }
+        selectedPeg: null,      // Seçili kaynak sütun (0, 1, 2 veya null)
+        moveCount: 0,
+        history: [],            // { disk, from, to }
+        isAnimating: false,
+        isCompleted: false,
+        isSimulating: false,
+        simAbortToken: 0,
+        gameGeneration: 0,
+        usedSimulation: false,
+        hintMove: null,         // { disk, from, to }
+        drag: null              // Aktif sürükleme bilgisi
+      };
+
+      /* ============================================================
+         6. YARDIMCI GEOMETRİ & EASING FONKSİYONLARI
+         ============================================================ */
+      function getDiskWidth(diskNum) {
+        // 3, 4 veya 5 diskte güzel orantılı genişlikler
+        const minW = 86;
+        const maxW = 204;
+        if (state.numDisks <= 1) return maxW;
+        const ratio = (diskNum - 1) / (state.numDisks - 1);
+        return Math.round(minW + ratio * (maxW - minW));
+      }
+
+      function getSlotPos(pegIndex, stackPosition) {
+        const x = PEG_X[pegIndex];
+        const y = BASE_Y - stackPosition * (DISK_HEIGHT + DISK_GAP) - DISK_HEIGHT / 2;
+        return { x, y };
+      }
+
+      function easeOutCubic(t) {
+        return 1 - Math.pow(1 - t, 3);
+      }
+
+      function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      // Yerçekimi + hafif yumuşak oturma hissi
+      function easeGravitySettle(t) {
+        if (t < 0.78) {
+          const p = t / 0.78;
+          return p * p * 1.025;
+        } else {
+          const p = (t - 0.78) / 0.22;
+          return 1.025 - Math.sin(p * Math.PI) * 0.025 - p * 0.025;
+        }
+      }
+
+      function setDiskTransform(diskNum, x, y, extraRotate = 0) {
+        const info = state.diskEls.get(diskNum);
+        if (!info) return;
+        info.x = x;
+        info.y = y;
+        info.g.setAttribute(
+          "transform",
+          extraRotate
+            ? `translate(${x.toFixed(2)}, ${y.toFixed(2)}) rotate(${extraRotate.toFixed(2)})`
+            : `translate(${x.toFixed(2)}, ${y.toFixed(2)})`
+        );
+      }
+
+      function bringDiskToFront(diskNum) {
+        const info = state.diskEls.get(diskNum);
+        if (info && info.g.parentNode) {
+          info.g.parentNode.appendChild(info.g);
+        }
+      }
+
+      function clientToSvgPoint(clientX, clientY) {
+        const pt = gameSvg.createSVGPoint();
+        pt.x = clientX;
+        pt.y = clientY;
+        const ctm = gameSvg.getScreenCTM();
+        if (!ctm) return { x: 480, y: 235 };
+        return pt.matrixTransform(ctm.inverse());
+      }
+
+      function getNearestPeg(svgX) {
+        let best = 0;
+        let minDist = Infinity;
+        for (let i = 0; i < 3; i++) {
+          const d = Math.abs(svgX - PEG_X[i]);
+          if (d < minDist) {
+            minDist = d;
+            best = i;
+          }
+        }
+        return best;
+      }
+
+      /* ============================================================
+         7. SEÇİLİ DİSK SÜZÜLME (HOVER FLOAT) DÖNGÜSÜ
+         ============================================================ */
+      let hoverPhase = 0;
+      function hoverLoop() {
+        hoverPhase += 0.065;
+        if (state.selectedPeg !== null && !state.isAnimating && !state.drag) {
+          const peg = state.pegs[state.selectedPeg];
+          if (peg.length > 0) {
+            const topDisk = peg[peg.length - 1];
+            const floatY = LIFT_Y + Math.sin(hoverPhase) * 5.5;
+            setDiskTransform(topDisk, PEG_X[state.selectedPeg], floatY);
+          }
+        }
+        requestAnimationFrame(hoverLoop);
+      }
+      requestAnimationFrame(hoverLoop);
+
+      /* ============================================================
+         8. DİSK SVG OLUŞTURMA & EKRAN GÜNCELLEMELERİ
+         ============================================================ */
+      function createDiskElement(diskNum) {
+        const width = getDiskWidth(diskNum);
+        const h = DISK_HEIGHT;
+        const halfW = width / 2;
+        const halfH = h / 2;
+        const col = DISK_COLORS[diskNum];
+
+        const g = document.createElementNS(SVG_NS, "g");
+        g.setAttribute("class", "disk-group");
+        g.setAttribute("data-disk", String(diskNum));
+        g.setAttribute("filter", "url(#diskShadow)");
+
+        // Ana yuvarlatılmış 3D gövde
+        const body = document.createElementNS(SVG_NS, "rect");
+        body.setAttribute("x", -halfW);
+        body.setAttribute("y", -halfH);
+        body.setAttribute("width", width);
+        body.setAttribute("height", h);
+        body.setAttribute("rx", 14);
+        body.setAttribute("ry", 14);
+        body.setAttribute("fill", col.grad);
+        body.setAttribute("stroke", col.stroke);
+        body.setAttribute("stroke-width", "1.8");
+        g.appendChild(body);
+
+        // Üst kenar parlama şeridi (specular highlight)
+        const gloss = document.createElementNS(SVG_NS, "rect");
+        gloss.setAttribute("x", -halfW + 9);
+        gloss.setAttribute("y", -halfH + 3.5);
+        gloss.setAttribute("width", width - 18);
+        gloss.setAttribute("height", h * 0.36);
+        gloss.setAttribute("rx", 8);
+        gloss.setAttribute("fill", "url(#diskGloss)");
+        gloss.setAttribute("pointer-events", "none");
+        g.appendChild(gloss);
+
+        // Alt gölge kenarı
+        const bottomRim = document.createElementNS(SVG_NS, "rect");
+        bottomRim.setAttribute("x", -halfW + 10);
+        bottomRim.setAttribute("y", halfH - 5.5);
+        bottomRim.setAttribute("width", width - 20);
+        bottomRim.setAttribute("height", 3.5);
+        bottomRim.setAttribute("rx", 2);
+        bottomRim.setAttribute("fill", "#000000");
+        bottomRim.setAttribute("opacity", "0.22");
+        bottomRim.setAttribute("pointer-events", "none");
+        g.appendChild(bottomRim);
+
+        // Sütun geçme oyuğu illüzyonu (üst kenarda küçük koyu elips)
+        const hole = document.createElementNS(SVG_NS, "ellipse");
+        hole.setAttribute("cx", "0");
+        hole.setAttribute("cy", -halfH + 1);
+        hole.setAttribute("rx", "11");
+        hole.setAttribute("ry", "2.6");
+        hole.setAttribute("fill", "#2c1708");
+        hole.setAttribute("opacity", "0.42");
+        hole.setAttribute("pointer-events", "none");
+        g.appendChild(hole);
+
+        // Numara madalyonu
+        const badge = document.createElementNS(SVG_NS, "circle");
+        badge.setAttribute("cx", "0");
+        badge.setAttribute("cy", "1");
+        badge.setAttribute("r", "12.5");
+        badge.setAttribute("fill", "rgba(255, 252, 245, 0.92)");
+        badge.setAttribute("stroke", col.stroke);
+        badge.setAttribute("stroke-width", "1.4");
+        badge.setAttribute("pointer-events", "none");
+        g.appendChild(badge);
+
+        // Disk numarası
+        const label = document.createElementNS(SVG_NS, "text");
+        label.setAttribute("x", "0");
+        label.setAttribute("y", "6.2");
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("font-size", "15.5");
+        label.setAttribute("font-weight", "900");
+        label.setAttribute("fill", "#26160a");
+        label.setAttribute("pointer-events", "none");
+        label.textContent = String(diskNum);
+        g.appendChild(label);
+
+        // Pointer olayları (tıklama + sürükle-bırak)
+        g.addEventListener("pointerdown", (e) => onDiskPointerDown(e, diskNum));
+
+        return { g, width, x: 0, y: 0 };
+      }
+
+      function updateDiskCursorStates() {
+        for (let p = 0; p < 3; p++) {
+          const stack = state.pegs[p];
+          stack.forEach((diskNum, idx) => {
+            const info = state.diskEls.get(diskNum);
+            if (!info) return;
+            const isTop = idx === stack.length - 1;
+            info.g.classList.toggle("locked-disk", !isTop);
+          });
+        }
+      }
+
+      function setFeedback(type, message) {
+        feedbackBar.className = "feedback-bar" + (type ? " " + type : "");
+        const icons = {
+          "": "i",
+          error: "!",
+          hint: "💡",
+          success: "✓",
+          info: "▶"
+        };
+        feedbackIcon.textContent = icons[type] ?? "i";
+        feedbackText.textContent = message;
+      }
+
+      function setPegHighlight(pegIndex, mode) {
+        // mode: "none" | "valid" | "invalid" | "selected" | "hint"
+        const el = pegHighlights[pegIndex];
+        if (!el) return;
+        if (mode === "none") {
+          el.setAttribute("fill-opacity", "0");
+          el.setAttribute("stroke-opacity", "0");
+        } else if (mode === "valid") {
+          el.setAttribute("fill", "#2ec4b6");
+          el.setAttribute("stroke", "#169c84");
+          el.setAttribute("fill-opacity", "0.14");
+          el.setAttribute("stroke-opacity", "0.85");
+        } else if (mode === "invalid") {
+          el.setAttribute("fill", "#ff4d4d");
+          el.setAttribute("stroke", "#d92626");
+          el.setAttribute("fill-opacity", "0.16");
+          el.setAttribute("stroke-opacity", "0.9");
+        } else if (mode === "selected") {
+          el.setAttribute("fill", "#ffe184");
+          el.setAttribute("stroke", "#f2b749");
+          el.setAttribute("fill-opacity", "0.11");
+          el.setAttribute("stroke-opacity", "0.75");
+        } else if (mode === "hint") {
+          el.setAttribute("fill", "#ffe184");
+          el.setAttribute("stroke", "#f4b93b");
+          el.setAttribute("fill-opacity", "0.16");
+          el.setAttribute("stroke-opacity", "0.95");
+        }
+      }
+
+      function clearAllPegHighlights() {
+        for (let i = 0; i < 3; i++) setPegHighlight(i, "none");
+      }
+
+      function clearHintVisual() {
+        state.hintMove = null;
+        hintOverlay.setAttribute("opacity", "0");
+        if (state.selectedPeg === null) clearAllPegHighlights();
+      }
+
+      function updateHUD() {
+        const n = state.numDisks;
+        const ideal = Math.pow(2, n) - 1;
+        const moves = state.moveCount;
+        moveCountDisplay.textContent = String(moves);
+        idealMovesDisplay.textContent = String(ideal);
+        formulaDisplay.textContent = `2${SUPERSCRIPTS[n]} − 1 = ${ideal}`;
+
+        if (state.isSimulating) {
+          statusBadge.className = "status-badge sim";
+          statusBadge.textContent = "Simülasyon Aktif";
+          extraMovesNote.textContent = `${moves} / ${ideal} adım`;
+        } else if (state.isCompleted) {
+          statusBadge.className = "status-badge optimal";
+          statusBadge.textContent = "Tamamlandı!";
+          const extra = Math.max(0, moves - ideal);
+          extraMovesNote.textContent = extra === 0 ? "Mükemmel optimizasyon!" : `+${extra} fazla hamle`;
+        } else if (moves === 0) {
+          statusBadge.className = "status-badge optimal";
+          statusBadge.textContent = "İdeal Yolda";
+          extraMovesNote.textContent = "Başlamaya hazır";
+        } else if (moves <= ideal) {
+          statusBadge.className = "status-badge optimal";
+          statusBadge.textContent = "İdeal Sınırda";
+          extraMovesNote.textContent = `Hedef: ${ideal} hamle`;
+        } else {
+          const extra = moves - ideal;
+          statusBadge.className = "status-badge extra";
+          statusBadge.textContent = `+${extra} Fazla Hamle`;
+          extraMovesNote.textContent = `İdealden ${extra} fazla`;
+        }
+
+        formulaInfoBox.innerHTML =
+          `<strong>Örüntü İpucu:</strong> <strong>${n} disk</strong> için en kısa çözüm ` +
+          `<strong>2${SUPERSCRIPTS[n]} − 1 = ${ideal}</strong> hamledir. Her ekstra disk, ideal hamle sayısını iki katının 1 fazlasına çıkarır!`;
+
+        undoBtn.disabled = state.history.length === 0 || state.isAnimating || state.isSimulating || state.isCompleted;
+        hintBtn.disabled = state.isAnimating || state.isSimulating || state.isCompleted;
+      }
+
+      function updateLifoPanel() {
+        for (let p = 0; p < 3; p++) {
+          const container = document.getElementById(`lifoStack${p}`);
+          container.innerHTML = "";
+          const stack = state.pegs[p];
+          if (stack.length === 0) {
+            const empty = document.createElement("div");
+            empty.className = "lifo-empty";
+            empty.textContent = "[ Boş ]";
+            container.appendChild(empty);
+          } else {
+            stack.forEach((diskNum, idx) => {
+              const chip = document.createElement("div");
+              const isTop = idx === stack.length - 1;
+              chip.className = "lifo-chip" + (isTop ? " top-item" : "");
+              chip.style.background = DISK_COLORS[diskNum].solid;
+              chip.textContent = `Disk ${diskNum}`;
+              container.appendChild(chip);
+            });
+          }
+        }
+      }
+
+      function renderAlgorithmLog() {
+        logCountBadge.textContent = `${state.history.length} Adım`;
+        if (state.history.length === 0) {
+          logList.innerHTML = `
+            <div class="log-empty">
+              Henüz hamle yapılmadı.<br/>
+              Yaptığınız her hamle burada adım adım kaydedilecektir.
+            </div>`;
+          return;
+        }
+
+        logList.innerHTML = "";
+        state.history.forEach((entry, idx) => {
+          const item = document.createElement("div");
+          const isLatest = idx === state.history.length - 1;
+          item.className = "log-item" + (isLatest ? " latest" : "");
+          const color = DISK_COLORS[entry.disk].solid;
+          item.innerHTML =
+            `<span class="log-step">${idx + 1}. Adım:</span> ` +
+            `<span class="log-disk-dot" style="background:${color}"></span>` +
+            `<strong>Disk ${entry.disk}</strong> → ${PEG_FROM_NAMES[entry.from]} ${PEG_TO_NAMES[entry.to]} taşındı.`;
+          logList.appendChild(item);
+        });
+        logList.scrollTop = logList.scrollHeight;
+      }
+
+      /* ============================================================
+         9. OYUN BAŞLATMA / SEVİYE DEĞİŞTİRME
+         ============================================================ */
+      function initGame(numDisks = state.numDisks) {
+        state.gameGeneration++;
+        stopSimulation(true);
+        confetti.stop();
+        victoryModal.classList.remove("open");
+
+        state.numDisks = numDisks;
+        state.pegs = [[], [], []];
+        state.diskEls.clear();
+        state.selectedPeg = null;
+        state.moveCount = 0;
+        state.history = [];
+        state.isAnimating = false;
+        state.isCompleted = false;
+        state.usedSimulation = false;
+        state.drag = null;
+
+        disksLayer.innerHTML = "";
+        clearHintVisual();
+        clearAllPegHighlights();
+
+        // Diskleri büyükten küçüğe A Sütununa yerleştir (alttan üste)
+        for (let d = numDisks; d >= 1; d--) {
+          state.pegs[0].push(d);
+          const diskObj = createDiskElement(d);
+          state.diskEls.set(d, diskObj);
+          disksLayer.appendChild(diskObj.g);
+          const pos = getSlotPos(0, state.pegs[0].length - 1);
+          setDiskTransform(d, pos.x, pos.y);
+        }
+
+        // Aktif seviye butonunu işaretle
+        levelBtns.forEach((btn) => {
+          btn.classList.toggle("active", Number(btn.dataset.disks) === numDisks);
+        });
+
+        updateDiskCursorStates();
+        updateHUD();
+        updateLifoPanel();
+        renderAlgorithmLog();
+        setFeedback("", `A Sütunundaki ${numDisks} diski aynı sırayla C Sütununa taşıyın. İdeal hedef: ${Math.pow(2, numDisks) - 1} hamle.`);
+      }
+
+      /* ============================================================
+         10. ANİMASYON YARDIMCILARI (YÜKSELME, KAYMA, YERÇEKİMİ, TİTREME)
+         ============================================================ */
+      function animateTween(durationMs, onFrame, gen = state.gameGeneration) {
+        return new Promise((resolve) => {
+          const start = performance.now();
+          function step(now) {
+            if (state.gameGeneration !== gen) {
+              resolve(false);
+              return;
+            }
+            const t = Math.min(1, (now - start) / durationMs);
+            onFrame(t);
+            if (t < 1) {
+              requestAnimationFrame(step);
+            } else {
+              resolve(true);
+            }
+          }
+          requestAnimationFrame(step);
+        });
+      }
+
+      function getSpeedMultiplier() {
+        if (!state.isSimulating) return 1;
+        const val = simSpeedSelect.value;
+        if (val === "slow") return 1.55;
+        if (val === "fast") return 0.45;
+        return 0.88;
+      }
+
+      // 3 aşamalı pürüzsüz disk taşıma animasyonu: Yüksel -> Yatay Kay -> Yerçekimiyle Otur
+      async function animateMoveDisk(diskNum, fromPeg, toPeg, options = {}) {
+        const {
+          alreadyLifted = false,
+          fromCustomPos = null,
+          recordMove = true
+        } = options;
+        const gen = state.gameGeneration;
+
+        state.isAnimating = true;
+        updateHUD();
+
+        const info = state.diskEls.get(diskNum);
+        bringDiskToFront(diskNum);
+        info.g.setAttribute("filter", "url(#selectedGlow)");
+
+        const speed = getSpeedMultiplier();
+        const startX = fromCustomPos ? fromCustomPos.x : info.x;
+        const startY = fromCustomPos ? fromCustomPos.y : info.y;
+        const targetStackIdx = state.pegs[toPeg].length; // Hedef sütunda oturacağı yeni indeks
+        const targetPos = getSlotPos(toPeg, targetStackIdx);
+
+        // Faz 1: Sütunun yukarısına doğru süzülerek yükselme
+        if (!alreadyLifted && !fromCustomPos) {
+          sound.playPick(diskNum);
+          if (!(await animateTween(170 * speed, (t) => {
+            const e = easeOutCubic(t);
+            const cy = startY + (LIFT_Y - startY) * e;
+            setDiskTransform(diskNum, startX, cy);
+          }, gen))) return false;
+        } else if (fromCustomPos && startY > LIFT_Y + 12) {
+          // Sürükleyip bırakınca hafifçe sütun hizasına toparla
+          const liftTop = Math.min(startY, LIFT_Y + 24);
+          if (!(await animateTween(90 * speed, (t) => {
+            const e = easeOutCubic(t);
+            const cx = startX + (targetPos.x - startX) * e;
+            const cy = startY + (liftTop - startY) * e;
+            setDiskTransform(diskNum, cx, cy);
+          }, gen))) return false;
+        }
+
+        // Faz 2: Hedef sütunun üzerine yatay kayma
+        const curX = info.x;
+        const curY = info.y;
+        if (Math.abs(curX - targetPos.x) > 1.5) {
+          const distFactor = Math.abs(targetPos.x - curX) / 285;
+          const slideDur = (165 + distFactor * 65) * speed;
+          if (!(await animateTween(slideDur, (t) => {
+            const e = easeInOutCubic(t);
+            const cx = curX + (targetPos.x - curX) * e;
+            // Çok zarif bir kavis (arc) ekle
+            const arcLift = Math.sin(t * Math.PI) * 14;
+            const cy = curY + (LIFT_Y - curY) * e - arcLift;
+            setDiskTransform(diskNum, cx, cy);
+          }, gen))) return false;
+        }
+
+        // Faz 3: Yerçekimi hissiyle (easing) yumuşakça yerine oturma
+        const dropStartY = info.y;
+        if (!(await animateTween(210 * speed, (t) => {
+          const e = easeGravitySettle(t);
+          const cy = dropStartY + (targetPos.y - dropStartY) * e;
+          setDiskTransform(diskNum, targetPos.x, cy);
+        }, gen))) return false;
+
+        if (state.gameGeneration !== gen) return false;
+
+        setDiskTransform(diskNum, targetPos.x, targetPos.y);
+        info.g.setAttribute("filter", "url(#diskShadow)");
+        sound.playWoodDrop(diskNum);
+
+        // Mantıksal yığın güncellemesi
+        state.pegs[fromPeg].pop();
+        state.pegs[toPeg].push(diskNum);
+
+        if (recordMove) {
+          state.moveCount++;
+          state.history.push({ disk: diskNum, from: fromPeg, to: toPeg });
+        }
+
+        state.selectedPeg = null;
+        clearHintVisual();
+        clearAllPegHighlights();
+        state.isAnimating = false;
+
+        updateDiskCursorStates();
+        updateLifoPanel();
+        renderAlgorithmLog();
+        updateHUD();
+
+        // Zafer kontrolü: Tüm diskler C Sütununda mı?
+        if (state.pegs[2].length === state.numDisks && recordMove) {
+          onPuzzleCompleted();
+        }
+        return true;
+      }
+
+      // Kural ihlali animasyonu: Hedef sütun üzerinde kırmızı parlama + titreme (shake) + yerine dönüş
+      async function animateInvalidAttempt(diskNum, fromPeg, toPeg, options = {}) {
+        const { fromCustomPos = null } = options;
+        const gen = state.gameGeneration;
+        state.isAnimating = true;
+        updateHUD();
+
+        const info = state.diskEls.get(diskNum);
+        const topTargetDisk = state.pegs[toPeg][state.pegs[toPeg].length - 1];
+        bringDiskToFront(diskNum);
+
+        sound.playError();
+        setPegHighlight(toPeg, "invalid");
+        setFeedback(
+          "error",
+          `Kural İhlali: ${diskNum} numaralı büyük disk, ${topTargetDisk} numaralı küçük diskin üzerine konulamaz!`
+        );
+
+        const targetHoverY = Math.min(
+          LIFT_Y + 26,
+          getSlotPos(toPeg, state.pegs[toPeg].length).y - 18
+        );
+        const startX = fromCustomPos ? fromCustomPos.x : info.x;
+        const startY = fromCustomPos ? fromCustomPos.y : info.y;
+
+        // Önce geçersiz hedef sütunun üzerine kısa yaklaşma
+        if (!(await animateTween(130, (t) => {
+          const e = easeOutCubic(t);
+          setDiskTransform(
+            diskNum,
+            startX + (PEG_X[toPeg] - startX) * e,
+            startY + (targetHoverY - startY) * e
+          );
+        }, gen))) return;
+
+        // Kırmızı uyarı parlaması + shake animasyonu
+        info.g.setAttribute("filter", "url(#errorGlow)");
+        const shakeBaseX = PEG_X[toPeg];
+        if (!(await animateTween(360, (t) => {
+          const damp = 1 - t;
+          const dx = Math.sin(t * Math.PI * 7) * 14 * damp;
+          const rot = Math.sin(t * Math.PI * 7) * 4.5 * damp;
+          setDiskTransform(diskNum, shakeBaseX + dx, targetHoverY, rot);
+        }, gen))) return;
+
+        // Kaynak sütunundaki orijinal yuvasına geri dönüş
+        const homeSlotIdx = state.pegs[fromPeg].indexOf(diskNum);
+        const homePos = getSlotPos(fromPeg, homeSlotIdx);
+        const curX = info.x;
+        const curY = info.y;
+
+        if (!(await animateTween(220, (t) => {
+          const e = easeInOutCubic(t);
+          const cx = curX + (homePos.x - curX) * e;
+          const arc = Math.sin(t * Math.PI) * 32;
+          const cy = curY + (homePos.y - curY) * e - arc;
+          setDiskTransform(diskNum, cx, cy);
+        }, gen))) return;
+
+        setDiskTransform(diskNum, homePos.x, homePos.y);
+        info.g.setAttribute("filter", "url(#diskShadow)");
+        state.selectedPeg = null;
+        clearAllPegHighlights();
+        state.isAnimating = false;
+        updateHUD();
+      }
+
+      // Alttaki kilitli diske (LIFO ihlali) dokunulduğunda yerinde kısa titreme
+      async function animateLockedDiskShake(diskNum, pegIdx) {
+        if (state.isAnimating) return;
+        const gen = state.gameGeneration;
+        state.isAnimating = true;
+        const info = state.diskEls.get(diskNum);
+        const topDisk = state.pegs[pegIdx][state.pegs[pegIdx].length - 1];
+        const baseX = info.x;
+        const baseY = info.y;
+
+        sound.playError();
+        info.g.setAttribute("filter", "url(#errorGlow)");
+        setFeedback(
+          "error",
+          `Yığın (LIFO) Kuralı: ${diskNum} numaralı disk altta! ${PEG_FULL_NAMES[pegIdx]} üzerinden yalnızca en üstteki ${topDisk} numaralı disk taşınabilir.`
+        );
+
+        if (!(await animateTween(300, (t) => {
+          const dx = Math.sin(t * Math.PI * 6) * 9 * (1 - t);
+          setDiskTransform(diskNum, baseX + dx, baseY);
+        }, gen))) return;
+
+        setDiskTransform(diskNum, baseX, baseY);
+        info.g.setAttribute("filter", "url(#diskShadow)");
+        state.isAnimating = false;
+      }
+
+      // Seçili diski havaya kaldırma veya yerine geri indirme
+      async function selectPegForMove(pegIndex) {
+        const stack = state.pegs[pegIndex];
+        if (stack.length === 0) {
+          setFeedback("error", `${PEG_FULL_NAMES[pegIndex]} boş! Taşımak için disk bulunan bir sütun seçin.`);
+          sound.playError();
+          return;
+        }
+        const gen = state.gameGeneration;
+        state.isAnimating = true;
+        const topDisk = stack[stack.length - 1];
+        const info = state.diskEls.get(topDisk);
+        bringDiskToFront(topDisk);
+        info.g.setAttribute("filter", "url(#selectedGlow)");
+        sound.playPick(topDisk);
+
+        const startY = info.y;
+        if (!(await animateTween(155, (t) => {
+          const e = easeOutCubic(t);
+          setDiskTransform(topDisk, PEG_X[pegIndex], startY + (LIFT_Y - startY) * e);
+        }, gen))) return;
+
+        hoverPhase = 0;
+        state.selectedPeg = pegIndex;
+        state.isAnimating = false;
+        clearAllPegHighlights();
+        setPegHighlight(pegIndex, "selected");
+        setFeedback("", `Disk ${topDisk} seçildi. Şimdi taşımak istediğiniz hedef sütuna tıklayın.`);
+      }
+
+      async function deselectCurrentPeg() {
+        if (state.selectedPeg === null) return;
+        const gen = state.gameGeneration;
+        const pegIndex = state.selectedPeg;
+        const stack = state.pegs[pegIndex];
+        const topDisk = stack[stack.length - 1];
+        const info = state.diskEls.get(topDisk);
+        const homePos = getSlotPos(pegIndex, stack.length - 1);
+
+        state.isAnimating = true;
+        state.selectedPeg = null;
+        clearAllPegHighlights();
+
+        const startY = info.y;
+        if (!(await animateTween(155, (t) => {
+          const e = easeGravitySettle(t);
+          setDiskTransform(topDisk, homePos.x, startY + (homePos.y - startY) * e);
+        }, gen))) return;
+
+        setDiskTransform(topDisk, homePos.x, homePos.y);
+        info.g.setAttribute("filter", "url(#diskShadow)");
+        sound.playWoodDrop(topDisk);
+        state.isAnimating = false;
+        setFeedback("", `Disk ${topDisk} ${PEG_FULL_NAMES[pegIndex]} üzerine geri bırakıldı.`);
+      }
+
+      /* ============================================================
+         11. KURAL KONTROLÜ & HAMLE YÖNETİMİ
+         ============================================================ */
+      function isLegalMove(fromPeg, toPeg) {
+        if (fromPeg === toPeg) return false;
+        const src = state.pegs[fromPeg];
+        const dst = state.pegs[toPeg];
+        if (src.length === 0) return false;
+        const movingDisk = src[src.length - 1];
+        if (dst.length === 0) return true;
+        return movingDisk < dst[dst.length - 1];
+      }
+
+      async function handlePegClick(pegIndex) {
+        if (state.isAnimating || state.isSimulating || state.isCompleted) return;
+
+        // 1) Henüz seçili sütun yoksa: bu sütunun en üstündeki diski seç
+        if (state.selectedPeg === null) {
+          await selectPegForMove(pegIndex);
+          return;
+        }
+
+        // 2) Aynı sütuna tekrar tıklandıysa: seçimi iptal et ve diski yerine indir
+        if (state.selectedPeg === pegIndex) {
+          await deselectCurrentPeg();
+          return;
+        }
+
+        // 3) Farklı hedef sütuna tıklandıysa: hamleyi kontrol et
+        const fromPeg = state.selectedPeg;
+        const movingDisk = state.pegs[fromPeg][state.pegs[fromPeg].length - 1];
+
+        if (isLegalMove(fromPeg, pegIndex)) {
+          const completed = await animateMoveDisk(movingDisk, fromPeg, pegIndex, { alreadyLifted: true });
+          if (completed && !state.isCompleted) {
+            setFeedback(
+              "success",
+              `${state.moveCount}. Adım: Disk ${movingDisk}, ${PEG_FROM_NAMES[fromPeg]} ${PEG_TO_NAMES[pegIndex]} taşındı.`
+            );
+          }
+        } else {
+          await animateInvalidAttempt(movingDisk, fromPeg, pegIndex);
+        }
+      }
+
+      /* ============================================================
+         12. SÜRÜKLE-BIRAK (DRAG & DROP) + TIKLAMA ETKİLEŞİMİ
+         ============================================================ */
+      function findDiskPegIndex(diskNum) {
+        for (let p = 0; p < 3; p++) {
+          if (state.pegs[p].includes(diskNum)) return p;
+        }
+        return -1;
+      }
+
+      function onDiskPointerDown(e, diskNum) {
+        if (state.isAnimating || state.isSimulating || state.isCompleted) return;
+        e.stopPropagation();
+
+        const pegIdx = findDiskPegIndex(diskNum);
+        if (pegIdx === -1) return;
+
+        // Eğer başka bir sütundan disk zaten seçiliyse, bu tıklama hedef sütun seçimi sayılır!
+        if (state.selectedPeg !== null && state.selectedPeg !== pegIdx) {
+          handlePegClick(pegIdx);
+          return;
+        }
+
+        const stack = state.pegs[pegIdx];
+        const isTop = stack[stack.length - 1] === diskNum;
+
+        // Alttaki bir diske tıklandıysa / sürüklenmeye çalışılıyorsa LIFO kuralını öğret!
+        if (!isTop) {
+          animateLockedDiskShake(diskNum, pegIdx);
+          return;
+        }
+
+        const pt = clientToSvgPoint(e.clientX, e.clientY);
+        const info = state.diskEls.get(diskNum);
+
+        state.drag = {
+          diskNum,
+          fromPeg: pegIdx,
+          pointerId: e.pointerId,
+          startClientX: e.clientX,
+          startClientY: e.clientY,
+          offsetX: info.x - pt.x,
+          offsetY: info.y - pt.y,
+          isDragging: false,
+          wasSelected: state.selectedPeg === pegIdx
+        };
+
+        try {
+          gameSvg.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+
+      gameSvg.addEventListener("pointermove", (e) => {
+        if (!state.drag || e.pointerId !== state.drag.pointerId) return;
+
+        const dx = e.clientX - state.drag.startClientX;
+        const dy = e.clientY - state.drag.startClientY;
+
+        if (!state.drag.isDragging && Math.hypot(dx, dy) > 8) {
+          state.drag.isDragging = true;
+          const info = state.diskEls.get(state.drag.diskNum);
+          bringDiskToFront(state.drag.diskNum);
+          info.g.classList.add("dragging");
+          info.g.setAttribute("filter", "url(#selectedGlow)");
+          if (!state.drag.wasSelected) {
+            sound.playPick(state.drag.diskNum);
+          }
+          clearHintVisual();
+        }
+
+        if (state.drag.isDragging) {
+          const pt = clientToSvgPoint(e.clientX, e.clientY);
+          const clampedX = Math.max(70, Math.min(890, pt.x + state.drag.offsetX));
+          const clampedY = Math.max(55, Math.min(365, pt.y + state.drag.offsetY));
+          setDiskTransform(state.drag.diskNum, clampedX, clampedY);
+
+          const hoverPeg = getNearestPeg(clampedX);
+          clearAllPegHighlights();
+          if (hoverPeg === state.drag.fromPeg) {
+            setPegHighlight(hoverPeg, "selected");
+          } else if (isLegalMove(state.drag.fromPeg, hoverPeg)) {
+            setPegHighlight(hoverPeg, "valid");
+          } else {
+            setPegHighlight(hoverPeg, "invalid");
+          }
+        }
+      });
+
+      async function endDrag(e) {
+        if (!state.drag || e.pointerId !== state.drag.pointerId) return;
+        const drag = state.drag;
+        state.drag = null;
+
+        try {
+          if (gameSvg.hasPointerCapture(e.pointerId)) {
+            gameSvg.releasePointerCapture(e.pointerId);
+          }
+        } catch (_) {}
+
+        const info = state.diskEls.get(drag.diskNum);
+        info.g.classList.remove("dragging");
+
+        // Hareket eşiği aşılmadıysa bunu tıklama olarak işle
+        if (!drag.isDragging) {
+          await handlePegClick(drag.fromPeg);
+          return;
+        }
+
+        const dropPeg = getNearestPeg(info.x);
+        const dropPos = { x: info.x, y: info.y };
+        clearAllPegHighlights();
+
+        // Aynı sütuna bırakıldıysa yerine yumuşakça oturt
+        if (dropPeg === drag.fromPeg) {
+          const gen = state.gameGeneration;
+          state.selectedPeg = null;
+          state.isAnimating = true;
+          const homePos = getSlotPos(drag.fromPeg, state.pegs[drag.fromPeg].length - 1);
+          if (!(await animateTween(170, (t) => {
+            const eVal = easeGravitySettle(t);
+            setDiskTransform(
+              drag.diskNum,
+              dropPos.x + (homePos.x - dropPos.x) * eVal,
+              dropPos.y + (homePos.y - dropPos.y) * eVal
+            );
+          }, gen))) return;
+          setDiskTransform(drag.diskNum, homePos.x, homePos.y);
+          info.g.setAttribute("filter", "url(#diskShadow)");
+          sound.playWoodDrop(drag.diskNum);
+          state.isAnimating = false;
+          updateHUD();
+          return;
+        }
+
+        // Geçerli hedef sütun
+        if (isLegalMove(drag.fromPeg, dropPeg)) {
+          const completed = await animateMoveDisk(drag.diskNum, drag.fromPeg, dropPeg, {
+            fromCustomPos: dropPos
+          });
+          if (completed && !state.isCompleted) {
+            setFeedback(
+              "success",
+              `${state.moveCount}. Adım: Disk ${drag.diskNum}, ${PEG_FROM_NAMES[drag.fromPeg]} ${PEG_TO_NAMES[dropPeg]} taşındı.`
+            );
+          }
+        } else {
+          // Kural dışı hedef sütun -> kırmızı parlama + shake + geri dönüş
+          await animateInvalidAttempt(drag.diskNum, drag.fromPeg, dropPeg, {
+            fromCustomPos: dropPos
+          });
+        }
+      }
+
+      gameSvg.addEventListener("pointerup", endDrag);
+      gameSvg.addEventListener("pointercancel", endDrag);
+
+      // Sütun boş alanlarına tıklama
+      document.querySelectorAll(".peg-hit-zone").forEach((zone) => {
+        zone.addEventListener("click", () => {
+          const pegIdx = Number(zone.dataset.peg);
+          handlePegClick(pegIdx);
+        });
+      });
+
+      /* ============================================================
+         13. GERİ AL (UNDO)
+         ============================================================ */
+      async function undoLastMove() {
+        if (state.history.length === 0 || state.isAnimating || state.isSimulating || state.isCompleted) return;
+        if (state.selectedPeg !== null) {
+          await deselectCurrentPeg();
+        }
+        const last = state.history.pop();
+        state.moveCount = Math.max(0, state.moveCount - 1);
+        await animateMoveDisk(last.disk, last.to, last.from, { recordMove: false });
+        setFeedback("", `Son hamle geri alındı: Disk ${last.disk} tekrar ${PEG_FULL_NAMES[last.from]} üzerine döndü.`);
+      }
+
+      /* ============================================================
+         14. OPTİMAL HANOİ ALGORİTMASI (HERHANGİ BİR DURUMDAN EN KISA YOL)
+         ============================================================ */
+      function computeOptimalMovesFromCurrentState(targetPeg = 2) {
+        const pos = new Array(state.numDisks + 1);
+        for (let p = 0; p < 3; p++) {
+          for (const d of state.pegs[p]) {
+            pos[d] = p;
+          }
+        }
+        const moves = [];
+        function solve(k, target) {
+          if (k === 0) return;
+          const curr = pos[k];
+          if (curr === target) {
+            solve(k - 1, target);
+          } else {
+            const aux = 3 - curr - target;
+            solve(k - 1, aux);
+            moves.push({ disk: k, from: curr, to: target });
+            pos[k] = target;
+            solve(k - 1, target);
+          }
+        }
+        solve(state.numDisks, targetPeg);
+        return moves;
+      }
+
+      // İpucu: Sonraki İdeal Hamleyi Göster
+      async function showOptimalHint() {
+        if (state.isAnimating || state.isSimulating || state.isCompleted) return;
+        if (state.selectedPeg !== null) {
+          await deselectCurrentPeg();
+        }
+
+        const moves = computeOptimalMovesFromCurrentState(2);
+        if (moves.length === 0) return;
+
+        const next = moves[0];
+        state.hintMove = next;
+        sound.playHint();
+
+        clearAllPegHighlights();
+        setPegHighlight(next.from, "hint");
+        setPegHighlight(next.to, "valid");
+
+        // Kavisli altın ipucu oku çiz
+        const x1 = PEG_X[next.from];
+        const x2 = PEG_X[next.to];
+        const y1 = LIFT_Y + 6;
+        const y2 = LIFT_Y + 6;
+        const midX = (x1 + x2) / 2;
+        const ctrlY = Math.abs(x2 - x1) > 400 ? 18 : 34;
+
+        hintArcPath.setAttribute("d", `M ${x1} ${y1} Q ${midX} ${ctrlY} ${x2} ${y2}`);
+
+        // Ok ucunun açısını teğet yönüne göre ayarla
+        const angleRad = Math.atan2(y2 - ctrlY, x2 - midX);
+        const angleDeg = (angleRad * 180) / Math.PI;
+        hintArrowHead.setAttribute("transform", `translate(${x2}, ${y2}) rotate(${angleDeg.toFixed(1)})`);
+        hintOverlay.setAttribute("opacity", "1");
+
+        setFeedback(
+          "hint",
+          `İpucu: ${next.disk} numaralı diski ${PEG_FROM_NAMES[next.from]} ${PEG_TO_NAMES[next.to]} taşı! (Kalan en kısa yol: ${moves.length} hamle)`
+        );
+      }
+
+      /* ============================================================
+         15. ADIM ADIM ÇÖZÜM SİMÜLASYONU
+         ============================================================ */
+      function sleep(ms) {
+        return new Promise((r) => setTimeout(r, ms));
+      }
+
+      function stopSimulation(silent = false) {
+        if (!state.isSimulating) return;
+        state.simAbortToken++;
+        state.isSimulating = false;
+        simulateBtn.textContent = "▶ Çözümü Simüle Et";
+        simulateBtn.classList.remove("btn-danger-soft");
+        simulateBtn.classList.add("btn-emerald");
+        speedControl.classList.remove("visible");
+        updateHUD();
+        if (!silent) {
+          setFeedback("", "Algoritma simülasyonu durduruldu. Kaldığınız yerden devam edebilir veya yeniden başlatabilirsiniz.");
+        }
+      }
+
+      async function toggleSimulation() {
+        if (state.isSimulating) {
+          stopSimulation(false);
+          return;
+        }
+        if (state.isAnimating) return;
+
+        // Eğer bulmaca zaten bitmişse, disk seçiliyse veya öğrenci ortadaysa:
+        // En kısa 2^n - 1 yolunu net gözlemlemek için baştan başlatıp simüle edelim
+        if (state.isCompleted || state.moveCount > 0 || state.selectedPeg !== null) {
+          initGame(state.numDisks);
+        }
+
+        state.isSimulating = true;
+        state.usedSimulation = true;
+        const token = ++state.simAbortToken;
+
+        simulateBtn.textContent = "■ Simülasyonu Durdur";
+        simulateBtn.classList.remove("btn-emerald");
+        simulateBtn.classList.add("btn-danger-soft");
+        speedControl.classList.add("visible");
+        updateHUD();
+
+        const plan = computeOptimalMovesFromCurrentState(2);
+        setFeedback(
+          "info",
+          `Algoritma simülasyonu başladı! ${state.numDisks} disk için en kısa yol (${plan.length} hamle) adım adım uygulanıyor...`
+        );
+
+        for (let i = 0; i < plan.length; i++) {
+          if (token !== state.simAbortToken || !state.isSimulating) return;
+          const step = plan[i];
+          setFeedback(
+            "info",
+            `Simülasyon (${i + 1}/${plan.length}): Disk ${step.disk} → ${PEG_FROM_NAMES[step.from]} ${PEG_TO_NAMES[step.to]} taşınıyor...`
+          );
+          await animateMoveDisk(step.disk, step.from, step.to, { recordMove: true });
+          if (token !== state.simAbortToken || !state.isSimulating) return;
+          const pauseMs = simSpeedSelect.value === "slow" ? 420 : simSpeedSelect.value === "fast" ? 90 : 210;
+          await sleep(pauseMs);
+        }
+      }
+
+      /* ============================================================
+         16. BULMACA TAMAMLANMA & YILDIZ / GERİ BİLDİRİM EKRANI
+         ============================================================ */
+      function onPuzzleCompleted() {
+        state.isCompleted = true;
+        const wasSim = state.usedSimulation;
+        if (state.isSimulating) {
+          stopSimulation(true);
+        }
+
+        const n = state.numDisks;
+        const ideal = Math.pow(2, n) - 1;
+        const moves = state.moveCount;
+        const extra = Math.max(0, moves - ideal);
+
+        updateHUD();
+        sound.playVictory();
+        confetti.burst();
+
+        // Yıldız hesaplama
+        let earnedStars = 1;
+        if (wasSim) {
+          earnedStars = 3;
+          victoryModalHeader.textContent = "🤖 Algoritma Simülasyonu Tamamlandı!";
+          victoryTitle.textContent = `En Kısa Yol: ${ideal} Hamle!`;
+          victoryDesc.textContent =
+            `Bilgisayar ${n} diski 2${SUPERSCRIPTS[n]} − 1 = ${ideal} hamlede çözdü. Sağdaki Algoritma Günlüğünden adımları inceleyebilir veya şimdi kendin deneyebilirsin!`;
+          setFeedback("success", `Simülasyon tamamlandı! ${n} disk ideal ${ideal} hamlede C Sütununa taşındı.`);
+        } else if (extra === 0) {
+          earnedStars = 3;
+          victoryModalHeader.textContent = "🏆 Mükemmel Optimizasyon!";
+          victoryTitle.textContent = "3 Yıldız Kazandın!";
+          victoryDesc.textContent =
+            `Harikasın! ${n} diski tam olarak en kısa yol olan ${ideal} hamlede (2${SUPERSCRIPTS[n]} − 1) C Sütununa taşıdın.`;
+          setFeedback("success", `Tebrikler! Bulmacayı ideal ${ideal} hamlede tamamlayarak 3 yıldız kazandın!`);
+        } else if (extra <= Math.ceil(ideal * 0.4)) {
+          earnedStars = 2;
+          victoryModalHeader.textContent = "⭐ Bulmaca Tamamlandı!";
+          victoryTitle.textContent = "Çok İyi Gidiyorsun! (2 Yıldız)";
+          victoryDesc.textContent =
+            `Tebrikler, tüm diskleri C Sütununa taşıdın! İdeal çözümden yalnızca ${extra} hamle fazla yaptın. Tekrar deneyerek ${ideal} hamlede 3 yıldıza ulaşabilirsin!`;
+          setFeedback("success", `Tebrikler! ${moves} hamlede tamamladın (idealden ${extra} hamle fazla).`);
+        } else {
+          earnedStars = 1;
+          victoryModalHeader.textContent = "🎉 Bulmaca Tamamlandı!";
+          victoryTitle.textContent = "Başardın! (1 Yıldız)";
+          victoryDesc.textContent =
+            `Tüm diskleri başarıyla C Sütununa taşıdın. İdeal çözümden ${extra} hamle fazla yaptın. Örüntüyü keşfetmek için "Çözümü Simüle Et" butonunu izleyip tekrar deneyebilirsin!`;
+          setFeedback("success", `Tebrikler! ${moves} hamlede tamamladın (idealden ${extra} hamle fazla).`);
+        }
+
+        vMoves.textContent = String(moves);
+        vIdeal.textContent = String(ideal);
+        vExtra.textContent = String(extra);
+
+        // Sonraki seviye butonu görünürlüğü
+        victoryNextBtn.style.display = state.numDisks < 5 ? "inline-flex" : "none";
+
+        // Yıldız animasyonlarını sıfırla ve sırayla yak
+        victoryStars.forEach((s) => s.classList.remove("earned"));
+        victoryModal.classList.add("open");
+
+        for (let i = 0; i < earnedStars; i++) {
+          setTimeout(() => {
+            victoryStars[i].classList.add("earned");
+          }, 220 + i * 240);
+        }
+      }
+
+      /* ============================================================
+         17. BUTON VE KLAVYE OLAY BAĞLANTILARI
+         ============================================================ */
+      levelBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const disks = Number(btn.dataset.disks);
+          initGame(disks);
+        });
+      });
+
+      undoBtn.addEventListener("click", undoLastMove);
+      hintBtn.addEventListener("click", showOptimalHint);
+      simulateBtn.addEventListener("click", toggleSimulation);
+      resetBtn.addEventListener("click", () => initGame(state.numDisks));
+
+      soundToggleBtn.addEventListener("click", () => {
+        sound.enabled = !sound.enabled;
+        soundIcon.textContent = sound.enabled ? "🔊" : "🔇";
+        soundLabel.textContent = sound.enabled ? "Ses Açık" : "Ses Kapalı";
+        soundToggleBtn.classList.toggle("muted", !sound.enabled);
+        if (sound.enabled) sound.playHint();
+      });
+
+      // Yardım modalı
+      function openHelpModal() {
+        helpModal.classList.add("open");
+      }
+      function closeHelpModal() {
+        helpModal.classList.remove("open");
+      }
+
+      helpBtn.addEventListener("click", openHelpModal);
+      closeHelpX.addEventListener("click", closeHelpModal);
+      startGameBtn.addEventListener("click", () => {
+        sound.ensureContext();
+        closeHelpModal();
+      });
+      helpModal.addEventListener("click", (e) => {
+        if (e.target === helpModal) closeHelpModal();
+      });
+
+      // Zafer modalı
+      function closeVictoryModal() {
+        victoryModal.classList.remove("open");
+      }
+      closeVictoryX.addEventListener("click", closeVictoryModal);
+      victoryCloseBtn.addEventListener("click", closeVictoryModal);
+      victoryReplayBtn.addEventListener("click", () => initGame(state.numDisks));
+      victoryNextBtn.addEventListener("click", () => {
+        if (state.numDisks < 5) initGame(state.numDisks + 1);
+      });
+      victoryModal.addEventListener("click", (e) => {
+        if (e.target === victoryModal) closeVictoryModal();
+      });
+
+      // Klavye kısayolları (Akıllı tahta / masaüstü kolaylığı: A/B/C veya 1/2/3)
+      window.addEventListener("keydown", (e) => {
+        if (helpModal.classList.contains("open")) {
+          if (e.key === "Escape" || e.key === "Enter") closeHelpModal();
+          return;
+        }
+        if (victoryModal.classList.contains("open")) {
+          if (e.key === "Escape") closeVictoryModal();
+          return;
+        }
+        const k = e.key.toLowerCase();
+        if (k === "a" || k === "1") handlePegClick(0);
+        else if (k === "b" || k === "2") handlePegClick(1);
+        else if (k === "c" || k === "3") handlePegClick(2);
+        else if (k === "z" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          undoLastMove();
+        }
+      });
+
+      // İlk açılışta 1. Seviye (3 Disk) kurulumu
+      initGame(3);
+    })();
+  </script>
+</body>
+</html>
